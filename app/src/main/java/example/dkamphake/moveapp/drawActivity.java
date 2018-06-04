@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import java.util.ArrayList;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,20 +38,31 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private Button btnStart, btnCircle, btnRect, btnReset;
     private Timer mTimer;
     private Canvas mCanvas;
+    private enum state {
+        NOTHING, RECTANGLE, CIRCLE
+    }
+    private state current_state = state.NOTHING;
 
-    public float[] mGyroX,mGyroY,mGyroZ;
-    public float[] mAccelX,mAccelY,mAccelZ;
-    public float[] rotX,rotY,rotZ, rotA;
+    private float[] mGyroX,mGyroY,mGyroZ;
+    private float[] mAccelX,mAccelY,mAccelZ;
+    private float[] rotX,rotY,rotZ, rotA;
 
-    //TODO implement as RingBuffer
+    //TODO implement as Queue
+    private ArrayList<Integer> GyroXList, GyroYList, GyroZList;
+    private ArrayList<Integer> AccelXList, AccelYList, AccelZList;
+    private ArrayList<Integer> RotXList, RotYList, RotZList, RotSkalarList;
+
+    private ArrayList<Point> position;
 
     private int tick = 0;
     private int tock = 0;
 
     private boolean gameIsRunning = false;
 
-    public float x_last = 190, y_last = 190;
-    public float x_current = 190, y_current = 190;
+    private float x_last = 190, y_last = 190;
+    private float x_current = 190, y_current = 190;
+
+    private int current_score = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,8 +100,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         btnStart.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                /*if(gameIsRunning) */startGame();
-                /*else stopGame();*/
+                if(!gameIsRunning) startGame();
+                else stopGame();
             }
 
         });
@@ -96,13 +109,19 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         //add the buttonListener to reset the state
         btnRect.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) { setCanvasToRect(); }
+            public void onClick(View v) {
+                setCanvasToRect();
+                current_state = state.RECTANGLE;
+            }
         });
 
         //add the buttonListener to reset the state
         btnCircle.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) { setCanvasToCircle(); }
+            public void onClick(View v) {
+                setCanvasToCircle();
+                current_state = state.CIRCLE;
+            }
         });
 
         //add the buttonListener to reset the state
@@ -116,11 +135,12 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     private void setCanvasToCircle() {
 
-        Paint pRed = new Paint();
+        Paint pPurple = new Paint();
         Paint pFill = new Paint();
-        pRed.setColor(Color.RED);
-        pRed.setStyle(Paint.Style.STROKE);
-        pRed.setAntiAlias(true);
+        pPurple.setColor(Color.parseColor("#800080"));
+        pPurple.setStyle(Paint.Style.STROKE);
+        pPurple.setStrokeWidth(40);
+        pPurple.setAntiAlias(true);
         pFill.setColor(Color.GRAY);
         pFill.setStyle(Paint.Style.FILL);
 
@@ -128,7 +148,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         Canvas tempCanvas = new Canvas(mBitmap);
         tempCanvas.drawBitmap(mBitmap, 0, 0, null);
         tempCanvas.drawRect(0,0,380, 380, pFill);
-        tempCanvas.drawCircle(190, 190,150, pRed);
+        tempCanvas.drawCircle(190, 190,150, pPurple);
 
 
         mView.setImageBitmap(mBitmap);
@@ -141,15 +161,16 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     private void setCanvasToRect() {
 
-        Paint pRed = new Paint();
-        pRed.setColor(Color.RED);
-        pRed.setStyle(Paint.Style.STROKE);
-        pRed.setAntiAlias(true);
+        Paint pPurple = new Paint();
+        pPurple.setColor(Color.parseColor("#800080"));
+        pPurple.setStyle(Paint.Style.STROKE);
+        pPurple.setStrokeWidth(40);
+        pPurple.setAntiAlias(true);
 
         mBitmap = makeGrayBox();
         Canvas tempCanvas = new Canvas(mBitmap);
         tempCanvas.drawBitmap(mBitmap, 0, 0, null);
-        tempCanvas.drawRect(40,40, 350, 350, pRed);
+        tempCanvas.drawRect(40,40, 350, 350, pPurple);
 
 
         mView.setImageBitmap(mBitmap);
@@ -177,13 +198,13 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private void startGame() {
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(new drawBitmap(), 0, refreshRate);
-        //gameIsRunning = true;
-        //btnStart.setText("Stop");
+        gameIsRunning = true;
+        btnStart.setText("Stop");
     }
 
     private void stopGame() {
-        //gameIsRunning = false;
-        //btnStart.setText("Start");
+        gameIsRunning = false;
+        btnStart.setText("Start");
         mTimer.cancel();
     }
 
@@ -202,24 +223,28 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     x_current = fitToCanvas(x_current - gyro[1]*8); //vertical
                     y_current = fitToCanvas(y_current - gyro[0]*8); //horizontal
 
+                    current_score += updateScore(x_current, y_current, gyro[1], gyro[0]);
+
                     //Create a new image bitmap and attach a brand new canvas to it
                     Canvas tempCanvas = new Canvas(mBitmap);
 
                     //Draw the image bitmap into the canvas
                     tempCanvas.drawBitmap(mBitmap, 0, 0, null);
 
+
+                    //Draw everything else you want into the canvas, in this example a rectangle with rounded edges
                     Paint p = new Paint();
                     p.setColor(Color.GREEN);
                     p.setAntiAlias(true);
-
-                    //Draw everything else you want into the canvas, in this example a rectangle with rounded edges
+                    position.add(new Point((int)x_current, (int)y_current));
+                    //drawPointsToCanvas(tempCanvas, position);
                     tempCanvas.drawLine(x_last,y_last, x_current, y_current, p);
 
                     //Attach the canvas to the ImageView
                     mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
                     @SuppressLint("DefaultLocale") String output =
-                            "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
+                            "Aktueller Punktestand: " + current_score + "\nAccel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
                             "ROTATION: X: " + String.format("%.3f", rotX[0]) + " Y: " + String.format("%.3f", rotY[0]) + " Z: " + String.format("%.3f", rotZ[0]) + " Scalar: "+String.format("%.3f", rotA[0])+ "\n"+
                             "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
                     mText.setText(output);
@@ -230,6 +255,36 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 }
             });
 
+        }
+    }
+
+    private void drawPointsToCanvas(Canvas tempCanvas, ArrayList<Point> position) {
+        Paint p = new Paint();
+        p.setColor(Color.GREEN);
+        p.setAntiAlias(true);
+        Paint r = new Paint();
+        r.setColor(Color.RED);
+        r.setAntiAlias(true);
+
+        if (position.size() < 100) {
+            for (Point pos : position) {
+                tempCanvas.drawLine(190,190, pos.x, pos.y, p);
+            }
+        } else {
+            for (Point pos : position) {
+                tempCanvas.drawLine(190, 190, pos.x, pos.y, r);
+            }
+        }
+    }
+
+    private int updateScore(float x_current, float y_current, float x_delta, float y_delta) {
+        int speedbonus = (int) (0.25 + 100* Math.abs(x_delta*y_delta));
+        if(y_current > 20 && y_current < 60 || y_current > 320 && y_current < 360) {
+            return speedbonus;
+        } else if (x_current > 20 && x_current < 60 || x_current > 320 && x_current < 360) {
+            return speedbonus;
+        } else {
+            return -5;
         }
     }
 
@@ -251,12 +306,25 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
 
     public final void reset() {
-        mView.setImageBitmap(makeGrayBox());
 
-        x_last = 190;
-        y_last = 190;
-        x_current = 190;
-        y_current = 190;
+        current_score = 0;
+
+        switch (current_state) {
+            case RECTANGLE:
+                setCanvasToRect();
+                break;
+            case CIRCLE:
+                setCanvasToCircle();
+                break;
+            case NOTHING:
+            default:
+                mView.setImageBitmap(makeGrayBox());
+                x_last = 190;
+                y_last = 190;
+                x_current = 190;
+                y_current = 190;
+                break;
+        }
     }
 
     @Override
