@@ -166,9 +166,9 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 position.add(new Point((int)x_current, (int)y_current));
                 if(position.size() >= 200) {
                     List<Point> last200Points = position.subList(position.size()-200, position.size());
-                    mBitmap = Drawing.drawPointsToCanvas(last200Points, current_state, mBitmap);
+                    mBitmap = Graphics.drawCourserToCanvas(last200Points, mBitmap);
                 } else {
-                    mBitmap = Drawing.drawPointsToCanvas(position, current_state);
+                    mBitmap = Graphics.drawCourserToCanvas(position, current_state);
                 }
 
                 //Attach the canvas to the ImageView
@@ -212,6 +212,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         x_last = 190;
         y_last = 40;
+        y_last = 40;
         x_current = 190;
         y_current = 40;
 
@@ -219,16 +220,16 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         switch (current_state) {
             case RECTANGLE:
-                mBitmap = Drawing.getMap(state.RECTANGLE);
+                mBitmap = Graphics.getMap(state.RECTANGLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case CIRCLE:
-                mBitmap = Drawing.getMap(state.CIRCLE);
+                mBitmap = Graphics.getMap(state.CIRCLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case NOTHING:
             default:
-                mBitmap = Drawing.getMap(state.NOTHING);
+                mBitmap = Graphics.getMap(state.NOTHING);
                 mView.setImageBitmap(mBitmap);
                 break;
         }
