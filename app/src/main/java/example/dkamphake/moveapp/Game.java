@@ -2,6 +2,7 @@ package example.dkamphake.moveapp;
 
 public class Game {
 
+    //TODO calculate score based on the distance to the closest point in the point-skeleton
     public static int getScore(float x_current, float y_current, float x_delta, float y_delta, state gamemode) {
         switch (gamemode) {
             case RECTANGLE:
