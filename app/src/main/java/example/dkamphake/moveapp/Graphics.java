@@ -9,6 +9,8 @@ import android.graphics.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.PI;
+
 public class Graphics {
 
     public static Bitmap getMap(state gamemode) {
@@ -48,6 +50,7 @@ public class Graphics {
                 break;
             case NOTHING:
             default:
+                //TODO
                 canvas.drawRect(20,20, 360, 360, green);
                 break;
         }
@@ -56,7 +59,7 @@ public class Graphics {
     }
 
     //may be used to draw more complex vector based maps
-    public static Bitmap drawPointsToCanvas(List<Point> pos, Bitmap map) {
+    public static Bitmap drawPointsToCanvas(List<Point> positions, Bitmap map) {
 
         Paint purple = new Paint();
         purple.setColor(Color.parseColor("#800080"));
@@ -73,13 +76,13 @@ public class Graphics {
         Canvas canvas = new Canvas(map);
         canvas.drawBitmap(map, 0, 0, null);
 
-        canvas.drawRect(40,40, 340, 340, purple);
-        for (int i = 1; i < pos.size(); i++) {
-            canvas.drawLine(pos.get(i - 1).x, pos.get(i - 1).y, pos.get(i).x, pos.get(i).y, purple);
+        //canvas.drawRect(40,40, 340, 340, purple);
+        for (int i = 1; i < positions.size(); i++) {
+            canvas.drawLine(positions.get(i - 1).x, positions.get(i - 1).y, positions.get(i).x, positions.get(i).y, purple);
         }
-        canvas.drawLine(pos.get(pos.size()).x, pos.get(pos.size()).y, pos.get(0).x, pos.get(0).y, purple);
-        for (int i = 0; i < pos.size(); i++) {
-            canvas.drawCircle(pos.get(i).x, pos.get(i).y, 2, green); //visualize Point-skeleton
+        canvas.drawLine(positions.get(positions.size()-1).x, positions.get(positions.size()-1).y, positions.get(0).x, positions.get(0).y, purple);
+        for (int i = 0; i < positions.size(); i++) {
+            canvas.drawCircle(positions.get(i).x, positions.get(i).y, 2, green); //visualize Point-skeleton
         }
 
         return map;
@@ -138,10 +141,14 @@ public class Graphics {
         return prepMap;
     }
 
-    private static List<Point> getRectangleList(float left, float top, float right, float bottom) {
+    public static List<Point> getStandardRectangleList() {
+        return getRectangleList(40, 40, 340, 340);
+    }
+
+    public static List<Point> getRectangleList(float left, float top, float right, float bottom) {
         List<Point> rect = new ArrayList<Point>();
 
-        final int LineResolution = 40; // amount of points in a line
+        final int LineResolution = 60; // amount of points in a line
 
         float horizontalStep = (right - left)/LineResolution;
         float verticalStep = (bottom - top)/LineResolution;
@@ -173,5 +180,37 @@ public class Graphics {
             rect.add(p);
         }
         return rect;
+    }
+//canvas.drawCircle(190, 190,150, purple);
+    public static List<Point> getStandardCircleList(int x, int y, int radius) {
+        List<Point> circle = new ArrayList<Point>();
+        int resolution = 90*4; //quarter-resolution
+        for(int i = 0; i < resolution; i++) {
+            int val = (i/90);
+            double pi_val =  PI/resolution*i;
+            switch (val) {
+                case 1:
+                    x += Math.sin(0+pi_val)*radius;
+                    y += Math.cos(0+pi_val)*radius;
+                break;
+                case 2:
+                    x += Math.sin(PI)*radius;
+                    y += Math.cos(PI)*radius;
+                    break;
+                case 3:
+                    x += Math.sin(PI)*radius;
+                    y += Math.cos(PI)*radius;
+                    break;
+                case 0:
+                default:
+                    x += Math.sin(PI)*radius;
+                    y += Math.cos(PI)*radius;
+                    break;
+
+            }
+            Point point = new Point(x, y);
+            circle.add(point);
+        }
+        return circle;
     }
 }

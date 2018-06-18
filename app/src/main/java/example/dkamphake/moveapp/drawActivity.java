@@ -27,6 +27,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 
+//grundmotivation
+//implementierungsdetails
+//kleine präsentation
+//27
 public class drawActivity extends AppCompatActivity implements SensorEventListener{
 
     private final int refreshRate = 1000/60;
@@ -36,7 +40,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private Sensor mRot;
     private ImageView mView;
     private Bitmap mBitmap = Bitmap.createBitmap(380, 380, Bitmap.Config.ARGB_8888);
-    private TextView mText;
+    private TextView mText, mScore;
     private Button btnStart, btnCircle, btnRect, btnReset;
     private Timer mTimer;
 
@@ -77,6 +81,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         //register the different display elements
         mView = findViewById(R.id.imageView);
         mText = findViewById(R.id.textView);
+        mScore = findViewById(R.id.textView2);
         btnStart = findViewById(R.id.btnStart);
         btnRect = findViewById(R.id.btnRect);
         btnCircle = findViewById(R.id.btnCircle);
@@ -158,10 +163,10 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 float[] accel = calcAverage3(mAccelX, mAccelY, mAccelZ);
                 float[] gyro = calcAverage3(mGyroX, mGyroY, mGyroZ);
 
-                x_current = fitToCanvas(x_current - gyro[1]*8); //vertical
-                y_current = fitToCanvas(y_current - gyro[0]*8); //horizontal
+                x_current = fitToCanvas(x_current + gyro[1]*8); //vertical
+                y_current = fitToCanvas(y_current + gyro[0]*8); //horizontal
 
-                current_score += Game.getScore(x_current, y_current, gyro[1], gyro[0], current_state);
+                current_score += Game.getScoreV2(x_current, y_current, gyro[1], gyro[0], current_state);
 
                 position.add(new Point((int)x_current, (int)y_current));
                 if(position.size() >= 200) {
@@ -175,9 +180,11 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
                 @SuppressLint("DefaultLocale") String output =
-                        "Aktueller Punktestand: " + current_score + "\nAccel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
+                        "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
                         "ROTATION: X: " + String.format("%.3f", rotX[0]) + " Y: " + String.format("%.3f", rotY[0]) + " Z: " + String.format("%.3f", rotZ[0]) + " Scalar: "+String.format("%.3f", rotA[0])+ "\n"+
                         "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
+                String scoreline = "Aktueller Punktestand: " + current_score;
+                mScore.setText(scoreline);
                 mText.setText(output);
 
                 x_last = x_current;
