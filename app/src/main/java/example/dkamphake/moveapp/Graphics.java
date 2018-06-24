@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.PI;
+import static java.lang.Math.max;
 
 public class Graphics {
 
@@ -42,8 +43,6 @@ public class Graphics {
         switch (gamemode) {
             case RECTANGLE:
                 canvas.drawRect(40,40, 340, 340, purple);
-                //List<Point> rectList = getRectangleList(40, 40, 340, 340);
-                //map = drawPointsToCanvas(rectList, map);
                 break;
             case CIRCLE:
                 canvas.drawCircle(190, 190,150, purple);
@@ -156,7 +155,7 @@ public class Graphics {
 
         /*  Adds the points     1<--4
          *  of a Rectangle      |   |
-         *  like this:          2---3
+         *  like this:          2-->3
          */
 
         //1->2
@@ -175,40 +174,28 @@ public class Graphics {
             rect.add(p);
         }
         //4->1
-        for (int i = 0; i < LineResolution; i++) { //connect the last point to the beginn
+        for (int i = 0; i < LineResolution; i++) { //connect the last point to the begin
             Point p = new Point((int) (right - i * horizontalStep), (int) (top));
             rect.add(p);
         }
         return rect;
     }
-//canvas.drawCircle(190, 190,150, purple);
-    public static List<Point> getStandardCircleList(int x, int y, int radius) {
-        List<Point> circle = new ArrayList<Point>();
-        int resolution = 90*4; //quarter-resolution
-        for(int i = 0; i < resolution; i++) {
-            int val = (i/90);
-            double pi_val =  PI/resolution*i;
-            switch (val) {
-                case 1:
-                    x += Math.sin(0+pi_val)*radius;
-                    y += Math.cos(0+pi_val)*radius;
-                break;
-                case 2:
-                    x += Math.sin(PI)*radius;
-                    y += Math.cos(PI)*radius;
-                    break;
-                case 3:
-                    x += Math.sin(PI)*radius;
-                    y += Math.cos(PI)*radius;
-                    break;
-                case 0:
-                default:
-                    x += Math.sin(PI)*radius;
-                    y += Math.cos(PI)*radius;
-                    break;
 
-            }
-            Point point = new Point(x, y);
+    public static List<Point> getStandardCircleList() {
+        return getCircleList(190, 190, 150);
+    }
+
+    public static List<Point> getCircleList(int x, int y, int radius) {
+        List<Point> circle = new ArrayList<Point>();
+        int resolution = 180; //quarter-resolution
+        for(int i = 0; i < resolution; i++) {
+            double test = 2*PI/resolution;
+            int new_x = x;
+            int new_y = y;
+            double pi_val = (test*i);
+            new_x += Math.sin(pi_val)*radius;
+            new_y += Math.cos(pi_val)*radius;
+            Point point = new Point(new_x, new_y);
             circle.add(point);
         }
         return circle;

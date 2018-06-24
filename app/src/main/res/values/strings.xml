@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">Move App</string>
     <string name="title_activity_scrolling">ScrollingActivity</string>
+    <string name="intro_text">
+        "Willkommen bei der MoveApp\n"
+        "\nTrainieren Sie Ihre Geschicklichkeit spielerisch!"
+        "Verfolgen Sie dabei Ihre Erfolge "
+        "und sehen Sie ihre Verbesserungen!"
+        "Passen Sie hier die App zu ihren belieben an."</string>
+
+
     <string name="large_text">
         "Material is the metaphor.\n\n"
 
@@ -92,4 +100,4 @@
     </string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_history">History</string>
-</resources>
+ </resources>

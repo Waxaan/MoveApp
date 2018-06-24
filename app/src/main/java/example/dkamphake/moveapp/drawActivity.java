@@ -30,7 +30,7 @@ import java.util.TimerTask;
 //grundmotivation
 //implementierungsdetails
 //kleine präsentation
-//27
+//23
 public class drawActivity extends AppCompatActivity implements SensorEventListener{
 
     private final int refreshRate = 1000/60;
@@ -166,7 +166,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 x_current = fitToCanvas(x_current + gyro[1]*8); //vertical
                 y_current = fitToCanvas(y_current + gyro[0]*8); //horizontal
 
-                current_score += Game.getScoreV2(x_current, y_current, gyro[1], gyro[0], current_state);
+                current_score += 10 *Game.getScoreV2(x_current, y_current, gyro[1], gyro[0], current_state);
 
                 position.add(new Point((int)x_current, (int)y_current));
                 if(position.size() >= 200) {
