@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener{
@@ -18,6 +19,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor mGyro, mAccel;
     //private TextView dataView1, dataView2, dataView3, dataView4, dataView5, dataView6;
     private Button btnHistory, btnGameStart;
+    private Switch invertSwtich;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         dataView6 = findViewById(R.id.textOutput6); */
         btnHistory = findViewById(R.id.btnChangeActivity);
         btnGameStart = findViewById(R.id.btnChangeActivity);
+        invertSwtich = findViewById(R.id.switch2);
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);

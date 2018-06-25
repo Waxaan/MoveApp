@@ -19,8 +19,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
+
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import java.util.List;
 import java.util.Timer;
@@ -40,8 +43,10 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private Sensor mRot;
     private ImageView mView;
     private Bitmap mBitmap = Bitmap.createBitmap(380, 380, Bitmap.Config.ARGB_8888);
+    private List<Bitmap> prevMaps;
     private TextView mText, mScore;
     private Button btnStart, btnCircle, btnRect, btnReset;
+    private Switch switchInvert;
     private Timer mTimer;
 
     private float[] mGyroX,mGyroY,mGyroZ;
@@ -53,7 +58,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private List<Integer> AccelXList, AccelYList, AccelZList;
     private List<Integer> RotXList, RotYList, RotZList, RotSkalarList;
 
-    private List<Point> position;
+    private List<Point> positions;
 
     private int tick = 0;
     private int tock = 0;
@@ -86,6 +91,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         btnRect = findViewById(R.id.btnRect);
         btnCircle = findViewById(R.id.btnCircle);
         btnReset = findViewById(R.id.btnReset);
+        switchInvert = findViewById(R.id.switch2);
+
 
         //initialize the variables needed to draw
         mGyroX = new float[5];
@@ -99,7 +106,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         rotZ = new float[5];
         rotA = new float[5];
 
-        position = new ArrayList<Point>();
+        positions = new ArrayList<Point>();
+        prevMaps = new LinkedList<Bitmap>();
 
 
         //add the buttonListener to start the game
@@ -163,17 +171,25 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 float[] accel = calcAverage3(mAccelX, mAccelY, mAccelZ);
                 float[] gyro = calcAverage3(mGyroX, mGyroY, mGyroZ);
 
-                x_current = fitToCanvas(x_current + gyro[1]*8); //vertical
-                y_current = fitToCanvas(y_current + gyro[0]*8); //horizontal
-
+                //if switch is inverted SUBTRACT the change
+                /*if(switchInvert.isChecked()) {
+                    x_current = fitToCanvas(x_current + gyro[1]*8); //vertical
+                    y_current = fitToCanvas(y_current + gyro[0]*8); //horizontal
+                } else { */
+                    x_current = fitToCanvas(x_current - gyro[1]*8); //vertical
+                    y_current = fitToCanvas(y_current - gyro[0]*8); //horizontal
+                //}
                 current_score += 10 *Game.getScoreV2(x_current, y_current, gyro[1], gyro[0], current_state);
 
-                position.add(new Point((int)x_current, (int)y_current));
-                if(position.size() >= 200) {
-                    List<Point> last200Points = position.subList(position.size()-200, position.size());
-                    mBitmap = Graphics.drawCourserToCanvas(last200Points, mBitmap);
+                positions.add(new Point((int)x_current, (int)y_current));
+                if(positions.size() <= 100) {
+                    mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
+                    prevMaps.add(mBitmap);
                 } else {
-                    mBitmap = Graphics.drawCourserToCanvas(position, current_state);
+                    List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
+                    mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
+                    prevMaps.remove(0);
+                    prevMaps.add(mBitmap);
                 }
 
                 //Attach the canvas to the ImageView
@@ -215,7 +231,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     public final void reset() {
 
-        position = new ArrayList<Point>();
+        positions = new LinkedList<Point>();
 
         x_last = 190;
         y_last = 40;

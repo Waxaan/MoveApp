@@ -1,6 +1,7 @@
 package example.dkamphake.moveapp;
 
 import android.graphics.Point;
+import android.graphics.drawable.shapes.Shape;
 
 import java.util.List;
 
@@ -15,10 +16,10 @@ public class Game {
         List<Point> skeleton;
         switch (gamemode) {
             case RECTANGLE:
-                skeleton = Graphics.getStandardRectangleList();
+                skeleton = ShapeGenerator.getStandardRectangleList();
                 break;
             case CIRCLE:
-                skeleton = Graphics.getStandardCircleList();
+                skeleton = ShapeGenerator.getStandardCircleList();
                 break;
             case NOTHING:
             default: return 0;
