@@ -152,14 +152,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
                     positions.add(Game.getNewPosition(positions.get(positions.size()), gyro[1], gyro[0], isInverted));
-                    //if switch is inverted SUBTRACT the change //TODO
-                /*if(switchInvert.isChecked()) {
-                    x_current = fitToCanvas(x_current + gyro[1]*8); //vertical
-                    y_current = fitToCanvas(y_current + gyro[0]*8); //horizontal
-                } else { */
-                    //x_current = fitToCanvas(x_current - gyro[1]*8); //vertical
-                    //y_current = fitToCanvas(y_current - gyro[0]*8); //horizontal
-                    //}
                     int cur_x = positions.get(positions.size()).x;
                     int cur_y = positions.get(positions.size()).y;
                     current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
@@ -193,9 +185,13 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     public float[] calcAverage3(List<Float> X, List<Float> Y, List<Float> Z) {
         float[] retArr = new float[3];
 
-        for(int i = 0; i < X.size(); i++) retArr[0] += X.get(i) / X.size();
-        for(int i = 0; i < Y.size(); i++) retArr[1] += Y.get(i) / Y.size();
-        for(int i = 0; i < Z.size(); i++) retArr[2] += Z.get(i) / Z.size();
+        //if there are less values in X|Y|Z than as intended in bufferSize dont run out of bounds
+        for(int i = 0; i < ((X.size() < bufferSize)? X.size() : bufferSize); i++)
+            retArr[0] += X.get(i) / X.size();
+        for(int i = 0; i < ((Y.size() < bufferSize)? Y.size() : bufferSize); i++)
+            retArr[1] += Y.get(i) / Y.size();
+        for(int i = 0; i < ((Z.size() < bufferSize)? Z.size() : bufferSize); i++)
+            retArr[2] += Z.get(i) / Z.size();
 
         return retArr;
     }
@@ -205,6 +201,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     public final void reset() {
 
         positions = new LinkedList<Point>();
+        //TODO change for each gamemode
         positions.add(new Point(190, 40));
         positions.add(new Point(190, 40));
 
@@ -212,15 +209,23 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         switch (current_state) {
             case RECTANGLE:
+                positions.add(Game.getstartPosition(state.RECTANGLE));
                 mBitmap = Graphics.getMap(state.RECTANGLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case CIRCLE:
+                positions.add(Game.getstartPosition(state.CIRCLE));
+                mBitmap = Graphics.getMap(state.CIRCLE);
+                mView.setImageBitmap(mBitmap);
+                break;
+            case WSHAPE:
+                positions.add(Game.getstartPosition(state.WSHAPE));
                 mBitmap = Graphics.getMap(state.CIRCLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case NOTHING:
             default:
+                positions.add(Game.getstartPosition(state.NOTHING));
                 mBitmap = Graphics.getMap(state.NOTHING);
                 mView.setImageBitmap(mBitmap);
                 break;
@@ -235,21 +240,14 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public final void onSensorChanged(SensorEvent event) {
         if(event.sensor==mAccel) {
-            //TODO
             AccelXList.add(event.values[0]);
-            //if(AccelXList.size() > bufferSize) AccelXList.remove(0);
             AccelYList.add(event.values[1]);
-            //if(AccelYList.size() > bufferSize) AccelYList.remove(0);
             AccelZList.add(event.values[2]);
-            //if(AccelZList.size() > bufferSize) AccelZList.remove(0);
 
         } else if(event.sensor==mGyro) {
             GyroXList.add(event.values[0]);
-            //if(GyroXList.size() > bufferSize) GyroXList.remove(0);
-            AccelYList.add(event.values[1]);
-            //if(AccelYList.size() > bufferSize) GyroYList.remove(0);
+            GyroYList.add(event.values[1]);
             GyroZList.add(event.values[2]);
-            //if(GyroZList.size() > bufferSize) GyroZList.remove(0);
         }
     }
 

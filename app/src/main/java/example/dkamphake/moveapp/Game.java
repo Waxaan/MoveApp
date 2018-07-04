@@ -59,4 +59,13 @@ public class Game {
 
         return new Point(new_x, new_y);
     }
+
+    public static Point getstartPosition(state state) {
+        Point point = new Point();
+        switch (state) {
+            case RECTANGLE: break;
+            default: break;
+        }
+        return point;
+    }
 }
