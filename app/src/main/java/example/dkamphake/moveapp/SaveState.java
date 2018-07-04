@@ -18,4 +18,6 @@ public class SaveState {
     public void setScore(int score) {
         this.score = score;
     }
+
+
 }

@@ -4,16 +4,12 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.Image;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -33,7 +29,7 @@ import java.util.TimerTask;
 //grundmotivation
 //implementierungsdetails
 //kleine präsentation
-//23
+//16
 public class drawActivity extends AppCompatActivity implements SensorEventListener{
 
     private final int refreshRate = 1000/60;
@@ -46,27 +42,15 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private List<Bitmap> prevMaps;
     private TextView mText, mScore;
     private Button btnStart, btnCircle, btnRect, btnReset;
-    private Switch switchInvert;
     private Timer mTimer;
 
-    private float[] mGyroX,mGyroY,mGyroZ;
-    private float[] mAccelX,mAccelY,mAccelZ;
-    private float[] rotX,rotY,rotZ, rotA;
-
-    //TODO implement as Queue
-    private List<Integer> GyroXList, GyroYList, GyroZList;
-    private List<Integer> AccelXList, AccelYList, AccelZList;
-    private List<Integer> RotXList, RotYList, RotZList, RotSkalarList;
+    private List<Float> GyroXList, GyroYList, GyroZList;
+    private List<Float> AccelXList, AccelYList, AccelZList;
 
     private List<Point> positions;
 
-    private int tick = 0;
-    private int tock = 0;
-
     private boolean gameIsRunning = false;
-
-    private float x_last = 190, y_last = 190;
-    private float x_current = 190, y_current = 190;
+    private boolean isInverted = false;
 
     private int current_score = 0;
 
@@ -91,37 +75,31 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         btnRect = findViewById(R.id.btnRect);
         btnCircle = findViewById(R.id.btnCircle);
         btnReset = findViewById(R.id.btnReset);
-        switchInvert = findViewById(R.id.switch2);
 
 
         //initialize the variables needed to draw
-        mGyroX = new float[5];
-        mGyroY = new float[5];
-        mGyroZ = new float[5];
-        mAccelX = new float[5];
-        mAccelY = new float[5];
-        mAccelZ = new float[5];
-        rotX = new float[5];
-        rotY= new float[5];
-        rotZ = new float[5];
-        rotA = new float[5];
+        AccelXList = new ArrayList<Float>();
+        AccelYList = new ArrayList<Float>();
+        AccelZList = new ArrayList<Float>();
+        GyroXList = new ArrayList<Float>();
+        GyroYList = new ArrayList<Float>();
+        GyroZList = new ArrayList<Float>();
 
         positions = new ArrayList<Point>();
         prevMaps = new LinkedList<Bitmap>();
 
-
         //add the buttonListener to start the game
-        btnStart.setOnClickListener(new View.OnClickListener(){
+        btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!gameIsRunning) startGame();
+                if (!gameIsRunning) startGame();
                 else stopGame();
             }
 
         });
 
         //add the buttonListener to set the gamemode to Rectangle
-        btnRect.setOnClickListener(new View.OnClickListener(){
+        btnRect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 current_state = state.RECTANGLE;
@@ -130,7 +108,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         });
 
         //add the buttonListener to set the gamemode to Circle
-        btnCircle.setOnClickListener(new View.OnClickListener(){
+        btnCircle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 current_state = state.CIRCLE;
@@ -139,9 +117,11 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         });
 
         //add the buttonListener to reset the game
-        btnReset.setOnClickListener(new View.OnClickListener(){
+        btnReset.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) { reset(); }
+            public void onClick(View v) {
+                reset();
+            }
         });
 
     }
@@ -167,77 +147,66 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 @Override
                 public void run() {
 
-                //update the sensorData based on the average of the last 3 values
-                float[] accel = calcAverage3(mAccelX, mAccelY, mAccelZ);
-                float[] gyro = calcAverage3(mGyroX, mGyroY, mGyroZ);
+                    //update the sensorData based on the average of the last 3 values
+                    float[] accel = calcAverage3(AccelXList, AccelYList, AccelZList);
+                    float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
-                //if switch is inverted SUBTRACT the change
+                    positions.add(Game.getNewPosition(positions.get(positions.size()), gyro[1], gyro[0], isInverted));
+                    //if switch is inverted SUBTRACT the change //TODO
                 /*if(switchInvert.isChecked()) {
                     x_current = fitToCanvas(x_current + gyro[1]*8); //vertical
                     y_current = fitToCanvas(y_current + gyro[0]*8); //horizontal
                 } else { */
-                    x_current = fitToCanvas(x_current - gyro[1]*8); //vertical
-                    y_current = fitToCanvas(y_current - gyro[0]*8); //horizontal
-                //}
-                current_score += 10 *Game.getScoreV2(x_current, y_current, gyro[1], gyro[0], current_state);
+                    //x_current = fitToCanvas(x_current - gyro[1]*8); //vertical
+                    //y_current = fitToCanvas(y_current - gyro[0]*8); //horizontal
+                    //}
+                    int cur_x = positions.get(positions.size()).x;
+                    int cur_y = positions.get(positions.size()).y;
+                    current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
 
-                positions.add(new Point((int)x_current, (int)y_current));
-                if(positions.size() <= 100) {
-                    mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
-                    prevMaps.add(mBitmap);
-                } else {
-                    List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
-                    mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
-                    prevMaps.remove(0);
-                    prevMaps.add(mBitmap);
-                }
+                    if(positions.size() <= 100) {
+                        mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
+                        prevMaps.add(mBitmap);
+                    } else {
+                        List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
+                        mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
+                        prevMaps.remove(0);
+                        prevMaps.add(mBitmap);
+                    }
 
-                //Attach the canvas to the ImageView
-                mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
+                    //Attach the canvas to the ImageView
+                    mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
-                @SuppressLint("DefaultLocale") String output =
-                        "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
-                        "ROTATION: X: " + String.format("%.3f", rotX[0]) + " Y: " + String.format("%.3f", rotY[0]) + " Z: " + String.format("%.3f", rotZ[0]) + " Scalar: "+String.format("%.3f", rotA[0])+ "\n"+
-                        "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
-                String scoreline = "Aktueller Punktestand: " + current_score;
-                mScore.setText(scoreline);
-                mText.setText(output);
-
-                x_last = x_current;
-                y_last = y_current;
-
+                    @SuppressLint("DefaultLocale") String output =
+                            "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
+                                    "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
+                    String scoreline = "Aktueller Punktestand: " + current_score;
+                    mScore.setText(scoreline);
+                    mText.setText(output);
                 }
             });
 
         }
     }
 
-    //returns the average value of a given array wth 3 coordinates
-    public float[] calcAverage3(float[] X, float[] Y, float[] Z) {
+    //returns the average value of a given list with 3 coordinates
+    public float[] calcAverage3(List<Float> X, List<Float> Y, List<Float> Z) {
         float[] retArr = new float[3];
 
-        for(int i = 0; i < bufferSize; i++) {
-            retArr[0] += X[i]/bufferSize;
-            retArr[1] += Y[i]/bufferSize;
-            retArr[2] += Z[i]/bufferSize;
-        }
+        for(int i = 0; i < X.size(); i++) retArr[0] += X.get(i) / X.size();
+        for(int i = 0; i < Y.size(); i++) retArr[1] += Y.get(i) / Y.size();
+        for(int i = 0; i < Z.size(); i++) retArr[2] += Z.get(i) / Z.size();
+
         return retArr;
     }
 
-    private float fitToCanvas(float val) {
-        return (val < 0)? 0 : (val > 379)? 379 : val; //if in canvas
-    }
 
 
     public final void reset() {
 
         positions = new LinkedList<Point>();
-
-        x_last = 190;
-        y_last = 40;
-        y_last = 40;
-        x_current = 190;
-        y_current = 40;
+        positions.add(new Point(190, 40));
+        positions.add(new Point(190, 40));
 
         current_score = 0;
 
@@ -266,22 +235,21 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public final void onSensorChanged(SensorEvent event) {
         if(event.sensor==mAccel) {
-            mAccelX[tock] = event.values[0];
-            mAccelY[tock] = event.values[1];
-            mAccelZ[tock] = event.values[2];
-            tock++;
-            if (tock == bufferSize-1) tock = 0;
+            //TODO
+            AccelXList.add(event.values[0]);
+            //if(AccelXList.size() > bufferSize) AccelXList.remove(0);
+            AccelYList.add(event.values[1]);
+            //if(AccelYList.size() > bufferSize) AccelYList.remove(0);
+            AccelZList.add(event.values[2]);
+            //if(AccelZList.size() > bufferSize) AccelZList.remove(0);
+
         } else if(event.sensor==mGyro) {
-            mGyroX[tick] = event.values[0];
-            mGyroY[tick] = event.values[1];
-            mGyroZ[tick] = event.values[2];
-            tick++;
-            if (tick == bufferSize-1) tick = 0;
-        } else if(event.sensor==mRot) {
-            rotX[0] = event.values[0];
-            rotY[0] = event.values[1];
-            rotZ[0] = event.values[2];
-            rotA[0] = event.values[3];
+            GyroXList.add(event.values[0]);
+            //if(GyroXList.size() > bufferSize) GyroXList.remove(0);
+            AccelYList.add(event.values[1]);
+            //if(AccelYList.size() > bufferSize) GyroYList.remove(0);
+            GyroZList.add(event.values[2]);
+            //if(GyroZList.size() > bufferSize) GyroZList.remove(0);
         }
     }
 
@@ -290,7 +258,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         super.onResume();
         mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(this, mAccel, SensorManager.SENSOR_DELAY_FASTEST);
-        mSensorManager.registerListener(this, mRot, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override

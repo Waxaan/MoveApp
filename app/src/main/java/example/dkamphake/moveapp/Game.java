@@ -1,7 +1,6 @@
 package example.dkamphake.moveapp;
 
 import android.graphics.Point;
-import android.graphics.drawable.shapes.Shape;
 
 import java.util.List;
 
@@ -52,4 +51,12 @@ public class Game {
     }
 
 
+    public static Point getNewPosition(Point point, float delta_x, float delta_y, boolean inverted) {
+        int new_x = (int) (point.x * ((inverted)? delta_x : -delta_x) * 8);
+        new_x =  (new_x < 0)? 0 : (new_x > 379)? 379 : new_x;
+        int new_y = (int) (point.x * ((inverted)? delta_y : -delta_y) * 8);
+        new_y =  (new_y < 0)? 0 : (new_y > 379)? 379 : new_y;
+
+        return new Point(new_x, new_y);
+    }
 }

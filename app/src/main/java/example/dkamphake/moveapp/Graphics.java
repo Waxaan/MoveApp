@@ -6,11 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static java.lang.Math.PI;
-import static java.lang.Math.max;
 
 public class Graphics {
 
