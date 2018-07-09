@@ -2,7 +2,6 @@ package example.dkamphake.moveapp;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
@@ -20,9 +19,7 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.File;
 import java.io.FileOutputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -134,21 +131,29 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void saveReplay() {
+
+        StringBuilder csvList = new StringBuilder();
+        for(Point p : positions){
+            csvList.append(p.x);
+            csvList.append(",");
+            csvList.append(p.y);
+            csvList.append(",");
+        }
+
         String filename = "replay_0";
         int i = 0;
         boolean isReplaySaved = false;
         while(isReplaySaved) {
             if(fileList()[i] == filename) i++;
             else {
-                filename = "replay" + i;
+                filename = "replay_" + i;
             }
         }
-        String fileContents = positions.toString();
         FileOutputStream outputStream;
 
         try {
             outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(fileContents.getBytes());
+            outputStream.write(csvList.toString().getBytes());
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -238,30 +243,9 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         positions = new LinkedList<Point>();
         current_score = 0;
-
-        switch (current_state) {
-            case RECTANGLE:
-                positions = Game.getStartPosition(state.RECTANGLE);
-                mBitmap = Graphics.getMap(state.RECTANGLE);
-                mView.setImageBitmap(mBitmap);
-                break;
-            case CIRCLE:
-                positions = Game.getStartPosition(state.CIRCLE);
-                mBitmap = Graphics.getMap(state.CIRCLE);
-                mView.setImageBitmap(mBitmap);
-                break;
-            case WSHAPE:
-                positions = Game.getStartPosition(state.WSHAPE);
-                mBitmap = Graphics.getMap(state.CIRCLE);
-                mView.setImageBitmap(mBitmap);
-                break;
-            case NOTHING:
-            default:
-                positions = Game.getStartPosition(state.NOTHING);
-                mBitmap = Graphics.getMap(state.NOTHING);
-                mView.setImageBitmap(mBitmap);
-                break;
-        }
+        positions = Game.getStartPosition(current_state);
+        mBitmap = Graphics.getMap(current_state);
+        mView.setImageBitmap(mBitmap);
     }
 
     @Override

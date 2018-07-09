@@ -100,4 +100,6 @@
     </string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_history">History</string>
+    <string name="replays">Schauen Sie sich ihren Verlauf an</string>
+    <string name="replay">Verlauf</string>
 </resources>

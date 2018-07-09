@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <Spinner
-            android:id="@+id/replayDropdown"
+            android:id="@+id/"
             android:layout_width="match_parent"
             android:layout_height="40dp"
             tools:layout_editor_absoluteX="8dp"

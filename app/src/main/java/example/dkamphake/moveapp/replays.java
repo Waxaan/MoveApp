@@ -11,6 +11,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 public class replays extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
@@ -27,7 +33,7 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
         dropdown = (Spinner) findViewById(R.id.replayDropdown);
         btnPlayReplay = (Button) findViewById(R.id.btnPlayReplay);
 
-        String[] arraySpinner = new String[] { "1", "2", "3", "4", "5" };
+        String[] arraySpinner = fileList();
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, arraySpinner);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -47,7 +53,26 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        FileInputStream file = null;
+        try {
+            file = openFileInput("replay_"+position);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
 
+        String data = null;
+        try { //might only read one Byte at a time, idk gotta test it
+            data = new String(String.valueOf(file.read()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String[] xypoints = data.split(",");
+        positions = new LinkedList<Point>();
+        for(int i=1; i < xypoints.length; i +=2){
+            Point np = new Point(Integer.parseInt(xypoints[i-1]), Integer.parseInt(xypoints[i]));
+            positions.add(np);
+        }
     }
 
     @Override
