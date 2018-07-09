@@ -2,6 +2,7 @@ package example.dkamphake.moveapp;
 
 import android.graphics.Point;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static java.lang.Math.min;
@@ -52,7 +53,7 @@ public class Game {
 
 
     public static Point getNewPosition(Point point, float delta_x, float delta_y, boolean inverted) {
-        int new_x = (int) (point.x * ((inverted)? delta_x : -delta_x) * 8);
+        int new_x = (int) (point.x * ((inverted)? delta_x : -delta_x) * 8); //changes the x position by delta_x or -delta_x depnding on if the
         new_x =  (new_x < 0)? 0 : (new_x > 379)? 379 : new_x;
         int new_y = (int) (point.x * ((inverted)? delta_y : -delta_y) * 8);
         new_y =  (new_y < 0)? 0 : (new_y > 379)? 379 : new_y;
@@ -60,12 +61,26 @@ public class Game {
         return new Point(new_x, new_y);
     }
 
-    public static Point getstartPosition(state state) {
-        Point point = new Point();
+    public static LinkedList<Point> getStartPosition(state state) {
+        LinkedList<Point> positions = new LinkedList<>();
         switch (state) {
-            case RECTANGLE: break;
-            default: break;
+            case RECTANGLE:
+                positions.add(new Point(190, 40));
+                positions.add(new Point(190, 40));
+                break;
+            case CIRCLE:
+                positions.add(new Point(190, 40));
+                positions.add(new Point(190, 40));
+                break;
+            case WSHAPE:
+                positions.add(new Point(190, 40));
+                positions.add(new Point(190, 40));
+                break;
+            default:
+                positions.add(new Point(190, 190));
+                positions.add(new Point(190, 190));
+                break;
         }
-        return point;
+        return positions;
     }
 }

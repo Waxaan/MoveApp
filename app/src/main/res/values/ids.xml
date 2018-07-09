@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="btnPlayReplay" type="id" />
+    <string-array name="gamemodes_dropdown">
+        <item>Rechteck</item>
+        <item>Kreis</item>
+        <item>W-Form</item>
+    </string-array>
+</resources>

@@ -13,11 +13,16 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Switch;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -30,18 +35,18 @@ import java.util.TimerTask;
 //implementierungsdetails
 //kleine präsentation
 //16
-public class drawActivity extends AppCompatActivity implements SensorEventListener{
+public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
 
     private final int refreshRate = 1000/60;
     private final int bufferSize = 5;
     private SensorManager mSensorManager;
     private Sensor mGyro, mAccel;
-    private Sensor mRot;
     private ImageView mView;
     private Bitmap mBitmap = Bitmap.createBitmap(380, 380, Bitmap.Config.ARGB_8888);
     private List<Bitmap> prevMaps;
     private TextView mText, mScore;
-    private Button btnStart, btnCircle, btnRect, btnReset;
+    private Button btnStart, btnReset;
+    private Spinner dropdown;
     private Timer mTimer;
 
     private List<Float> GyroXList, GyroYList, GyroZList;
@@ -65,16 +70,16 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         assert mSensorManager != null;
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        mRot = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
         //register the different display elements
         mView = findViewById(R.id.imageView);
         mText = findViewById(R.id.textView);
         mScore = findViewById(R.id.textView2);
         btnStart = findViewById(R.id.btnStart);
-        btnRect = findViewById(R.id.btnRect);
-        btnCircle = findViewById(R.id.btnCircle);
+        //btnRect = findViewById(R.id.btnRect);
+        //btnCircle = findViewById(R.id.btnCircle);
         btnReset = findViewById(R.id.btnReset);
+        dropdown = findViewById(R.id.spinner);
 
 
         //initialize the variables needed to draw
@@ -98,23 +103,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         });
 
-        //add the buttonListener to set the gamemode to Rectangle
-        btnRect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                current_state = state.RECTANGLE;
-                reset();
-            }
-        });
-
-        //add the buttonListener to set the gamemode to Circle
-        btnCircle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                current_state = state.CIRCLE;
-                reset();
-            }
-        });
 
         //add the buttonListener to reset the game
         btnReset.setOnClickListener(new View.OnClickListener() {
@@ -124,6 +112,10 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.gamemodes_dropdown, android.R.layout.simple_spinner_dropdown_item);
+        dropdown.setAdapter(adapter);
+        dropdown.setOnItemClickListener((AdapterView.OnItemClickListener) this);
     }
 
     private void startGame() {
@@ -134,9 +126,53 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void stopGame() {
+
+        saveReplay();
         gameIsRunning = false;
         btnStart.setText("Start");
         mTimer.cancel();
+    }
+
+    private void saveReplay() {
+        String filename = "replay_0";
+        int i = 0;
+        boolean isReplaySaved = false;
+        while(isReplaySaved) {
+            if(fileList()[i] == filename) i++;
+            else {
+                filename = "replay" + i;
+            }
+        }
+        String fileContents = positions.toString();
+        FileOutputStream outputStream;
+
+        try {
+            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+            outputStream.write(fileContents.getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (position) {
+            case 0 : current_state = state.RECTANGLE;
+                break; //rectangle
+            case 1 :  current_state = state.CIRCLE;
+                break; //Circle
+            case 2 :  current_state = state.WSHAPE;
+                break; //W-Shape
+            default : current_state = state.NOTHING;
+                break;
+        }
+        reset();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        return;
     }
 
     class drawBitmap extends TimerTask {
@@ -147,34 +183,34 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 @Override
                 public void run() {
 
-                    //update the sensorData based on the average of the last 3 values
-                    float[] accel = calcAverage3(AccelXList, AccelYList, AccelZList);
-                    float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
+                //update the sensorData based on the average of the last 3 values
+                float[] accel = calcAverage3(AccelXList, AccelYList, AccelZList);
+                float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
-                    positions.add(Game.getNewPosition(positions.get(positions.size()), gyro[1], gyro[0], isInverted));
-                    int cur_x = positions.get(positions.size()).x;
-                    int cur_y = positions.get(positions.size()).y;
-                    current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
+                positions.add(Game.getNewPosition(positions.get(positions.size()), gyro[1], gyro[0], isInverted));
+                int cur_x = positions.get(positions.size()).x;
+                int cur_y = positions.get(positions.size()).y;
+                current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
 
-                    if(positions.size() <= 100) {
-                        mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
-                        prevMaps.add(mBitmap);
-                    } else {
-                        List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
-                        mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
-                        prevMaps.remove(0);
-                        prevMaps.add(mBitmap);
-                    }
+                if(positions.size() <= 100) {
+                    mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
+                    prevMaps.add(mBitmap);
+                } else {
+                    List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
+                    mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
+                    prevMaps.remove(0);
+                    prevMaps.add(mBitmap);
+                }
 
-                    //Attach the canvas to the ImageView
-                    mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
+                //Attach the canvas to the ImageView
+                mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
-                    @SuppressLint("DefaultLocale") String output =
-                            "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
-                                    "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
-                    String scoreline = "Aktueller Punktestand: " + current_score;
-                    mScore.setText(scoreline);
-                    mText.setText(output);
+                @SuppressLint("DefaultLocale") String output =
+                        "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
+                                "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
+                String scoreline = "Aktueller Punktestand: " + current_score;
+                mScore.setText(scoreline);
+                mText.setText(output);
                 }
             });
 
@@ -201,31 +237,27 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     public final void reset() {
 
         positions = new LinkedList<Point>();
-        //TODO change for each gamemode
-        positions.add(new Point(190, 40));
-        positions.add(new Point(190, 40));
-
         current_score = 0;
 
         switch (current_state) {
             case RECTANGLE:
-                positions.add(Game.getstartPosition(state.RECTANGLE));
+                positions = Game.getStartPosition(state.RECTANGLE);
                 mBitmap = Graphics.getMap(state.RECTANGLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case CIRCLE:
-                positions.add(Game.getstartPosition(state.CIRCLE));
+                positions = Game.getStartPosition(state.CIRCLE);
                 mBitmap = Graphics.getMap(state.CIRCLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case WSHAPE:
-                positions.add(Game.getstartPosition(state.WSHAPE));
+                positions = Game.getStartPosition(state.WSHAPE);
                 mBitmap = Graphics.getMap(state.CIRCLE);
                 mView.setImageBitmap(mBitmap);
                 break;
             case NOTHING:
             default:
-                positions.add(Game.getstartPosition(state.NOTHING));
+                positions = Game.getStartPosition(state.NOTHING);
                 mBitmap = Graphics.getMap(state.NOTHING);
                 mView.setImageBitmap(mBitmap);
                 break;

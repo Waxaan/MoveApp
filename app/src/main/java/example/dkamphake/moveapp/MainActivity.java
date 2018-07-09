@@ -17,14 +17,14 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        btnHistory = findViewById(R.id.btnChangeActivity);
+        btnHistory = findViewById(R.id.History);
         btnGameStart = findViewById(R.id.btnChangeActivity);
         invertSwitch = findViewById(R.id.switch2);
 
         btnHistory.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, History.class));
+                startActivity(new Intent(MainActivity.this, replays.class));
             }
         });
 
@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity{
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, drawActivity.class);
                 intent.putExtra("inverted", false);
+                intent.putExtra("replay", 0);
                 startActivity(intent);
             }
         });
