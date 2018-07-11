@@ -27,7 +27,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
+
+public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
 
     //onscreen refresh rate
     private final int refreshRate = 1000/60;
@@ -82,9 +83,10 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         //add the different game-modes to the dropdown
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.gamemodes_dropdown, android.R.layout.simple_spinner_dropdown_item);
+                R.array.gamemodes_dropdown, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         dropdown.setAdapter(adapter);
-        dropdown.setOnItemClickListener((AdapterView.OnItemClickListener) this);
+        dropdown.setOnItemSelectedListener(this);
 
         //add the buttonListener to start the game
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -105,7 +107,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-
     }
 
     private void startGame() {
@@ -119,7 +120,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private void stopGame() {
         //TODO: change the start/stop and Interrupt/continue and Reset buttons to save at the right time
 
-        saveReplay();
+        //saveReplay();
         gameIsRunning = false;
         btnStart.setText("Continue");
         mTimer.cancel();
@@ -156,7 +157,22 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    //updates the current state of the game to the now selected item in the dropdown-menu
+    //updates the current state of the game according to the now selected item in the dropdown-menu
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        switch (position) {
+            case 0 : current_state = state.RECTANGLE;
+                break; //rectangle
+            case 1 :  current_state = state.CIRCLE;
+                break; //Circle
+            case 2 :  current_state = state.WSHAPE;
+                break; //W-Shape
+            default : current_state = state.NOTHING;
+                break;
+        }
+        reset();
+    }
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         switch (position) {
@@ -174,6 +190,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
+
     }
 
     class drawBitmap extends TimerTask {
@@ -222,7 +239,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     public float[] calcAverage3(List<Float> X, List<Float> Y, List<Float> Z) {
         float[] retArr = new float[3];
 
-        //if there are less values in X|Y|Z than as intended in bufferSize dont run out of bounds
+        //if there are less values in X|Y|Z than as intended in bufferSize don't run out of bounds
         for(int i = 0; i < ((X.size() < bufferSize)? X.size() : bufferSize); i++)
             retArr[0] += X.get(i) / X.size();
         for(int i = 0; i < ((Y.size() < bufferSize)? Y.size() : bufferSize); i++)

@@ -35,8 +35,7 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, drawActivity.class);
-                intent.putExtra("inverted", false);
-                intent.putExtra("replay", 0);
+                intent.putExtra("inverted", inverted);
                 startActivity(intent);
             }
         });

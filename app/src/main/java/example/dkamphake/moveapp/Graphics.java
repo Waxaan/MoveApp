@@ -52,7 +52,6 @@ public class Graphics {
                 break;
             case NOTHING:
             default:
-                getMap();
                 canvas.drawRect(20,20, 360, 360, green);
                 break;
         }
