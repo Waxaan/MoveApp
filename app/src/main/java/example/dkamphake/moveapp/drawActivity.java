@@ -24,11 +24,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
 
-public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener {
+public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
 
     //onscreen refresh rate
     private final int refreshRate = 1000/60;
@@ -113,16 +114,17 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         gameIsRunning = true;
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(new drawBitmap(), 0, refreshRate);
-        btnStart.setText("Interrupt");
+        btnStart.setText("Stop");
     }
 
     //interrupts game and saves the progress
     private void stopGame() {
         //TODO: change the start/stop and Interrupt/continue and Reset buttons to save at the right time
 
-        //saveReplay();
+        saveReplay();
+        reset();
         gameIsRunning = false;
-        btnStart.setText("Continue");
+        btnStart.setText("Restart");
         mTimer.cancel();
     }
 
@@ -136,7 +138,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             csvList.append(",");
         }
 
-        String filename = "replay_0";
+        Random rand = new Random();
+        String filename = "replay_"+ rand.nextInt(100);
         int i = 0;
         boolean isReplaySaved = false;
         while(!isReplaySaved) {
@@ -157,37 +160,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    //updates the current state of the game according to the now selected item in the dropdown-menu
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        switch (position) {
-            case 0 : current_state = state.RECTANGLE;
-                break; //rectangle
-            case 1 :  current_state = state.CIRCLE;
-                break; //Circle
-            case 2 :  current_state = state.WSHAPE;
-                break; //W-Shape
-            default : current_state = state.NOTHING;
-                break;
-        }
-        reset();
-    }
-
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        switch (position) {
-            case 0 : current_state = state.RECTANGLE;
-                break; //rectangle
-            case 1 :  current_state = state.CIRCLE;
-                break; //Circle
-            case 2 :  current_state = state.WSHAPE;
-                break; //W-Shape
-            default : current_state = state.NOTHING;
-                break;
-        }
-        reset();
-    }
-
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
 
@@ -201,38 +173,54 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 @Override
                 public void run() {
 
-                //update the sensorData based on the average of the last 3 values
-                float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
+                    //update the sensorData based on the average of the last 3 values
+                    float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
-                positions.add(Game.getNewPosition(positions.get(positions.size()), gyro[1], gyro[0], isInverted));
-                int cur_x = positions.get(positions.size()).x;
-                int cur_y = positions.get(positions.size()).y;
-                current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
+                    positions.add(Game.getNewPosition(positions.get(positions.size()-1), gyro[1], gyro[0], false));
+                    int cur_x = positions.get(positions.size()-1).x;
+                    int cur_y = positions.get(positions.size()-1).y;
+                    current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
 
-                if(positions.size() <= 100) {
-                    mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
-                    prevMaps.add(mBitmap);
-                } else {
-                    List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
-                    mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
-                    prevMaps.remove(0);
-                    prevMaps.add(mBitmap);
-                }
+                    if(positions.size() <= 100) {
+                        mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
+                        prevMaps.add(mBitmap);
+                    } else {
+                        List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
+                        mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
+                        prevMaps.remove(0);
+                        prevMaps.add(mBitmap);
+                    }
 
-                //Attach the canvas to the ImageView
-                mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
+                    //Attach the canvas to the ImageView
+                    mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
-                @SuppressLint("DefaultLocale") String output =
-                                "GYRO: X: " + String.format("%.3f", gyro[0]) +
-                                    "m Y: " + String.format("%.3f", gyro[1]) +
-                                    "m Z: " + String.format("%.3f", gyro[2]) + "m";
-                String scoreline = "Aktueller Punktestand: " + current_score;
-                mScore.setText(scoreline);
-                mText.setText(output);
+                    @SuppressLint("DefaultLocale") String output =
+                                    "GYRO: X: " + String.format("%.3f", gyro[0]) +
+                                        "m Y: " + String.format("%.3f", gyro[1]) +
+                                        "m Z: " + String.format("%.3f", gyro[2]) + "m";
+                    String scoreline = "Aktueller Punktestand: " + current_score;
+                    mScore.setText(scoreline);
+                    mText.setText(output);
                 }
             });
 
         }
+    }
+
+    //updates the current state of the game according to the now selected item in the dropdown-menu
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch (position) {
+            case 0 : current_state = state.RECTANGLE;
+                break; //rectangle
+            case 1 :  current_state = state.CIRCLE;
+                break; //Circle
+            case 2 :  current_state = state.WSHAPE;
+                break; //W-Shape
+            default : current_state = state.NOTHING;
+                break;
+        }
+        reset();
     }
 
     //returns the average value of a given list with 3 coordinates
@@ -251,7 +239,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     }
 
 
-
     public final void reset() {
 
         positions = new LinkedList<>();
@@ -259,6 +246,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         positions = Game.getStartPosition(current_state);
         mBitmap = Graphics.getMap(current_state);
         mView.setImageBitmap(mBitmap);
+        prevMaps = new LinkedList<>();
+        prevMaps.add(mBitmap);
     }
 
     @Override

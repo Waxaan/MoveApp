@@ -10,17 +10,23 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.Scanner;
 
 public class replays extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     private int replay_clicked = 0;
     private Button btnPlayReplay;
     private Spinner replayDropdown;
     private LinkedList<Point> positions;
+    private TextView countPoints;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,12 +36,19 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
 
         replayDropdown = (Spinner) findViewById(R.id.replayDropdown);
         btnPlayReplay = (Button) findViewById(R.id.btnPlayReplay);
+        countPoints = findViewById(R.id.textView5);
 
-        String[] arraySpinner = fileList();
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, arraySpinner);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        replayDropdown.setAdapter(adapter);
+        String[] arraySpinner = fileList();//{"test1", "test3", "test2"};
+
+        Spinner spinner = (Spinner)findViewById(R.id.replayDropdown);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+        for(int i = 0; i < arraySpinner.length; i++) {
+            spinnerAdapter.add(arraySpinner[i]);
+        }
+        spinnerAdapter.notifyDataSetChanged();
+        spinner.setOnItemSelectedListener(this);
 
 
         btnPlayReplay.setOnClickListener(new View.OnClickListener(){
@@ -49,28 +62,58 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
         });
     }
 
+
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         FileInputStream file = null;
         try {
-            file = openFileInput("replay_"+position);
+            file = openFileInput("replay_0");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        String data = null;
+        int data;
+        String out = "";
         try { //might only read one Byte at a time, idk gotta test it
-            data = new String(String.valueOf(file.read()));
+            data = file.read();
+            while(data != -1) {
+                out += String.valueOf(data);
+                data = file.read();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        String outstr = "";
 
-        String[] xypoints = data.split(",");
-        positions = new LinkedList<Point>();
-        for(int i=1; i < xypoints.length; i +=2){
-            Point np = new Point(Integer.parseInt(xypoints[i-1]), Integer.parseInt(xypoints[i]));
-            positions.add(np);
+        //convert Strings like "495748" to Integer like "190"
+        String[] xypoints = out.split("44");
+        int[] outArr = new int[xypoints.length];
+
+        for(int i = 0; i < xypoints.length; i++) {
+            int cur_number = 0;
+            for(int j = 1; j < xypoints[i].length(); j+=2) {
+                cur_number *= 10;
+                char b_number = xypoints[i].charAt(j-1);
+                char s_number = xypoints[i].charAt(j);
+                int raw_number = Character.getNumericValue(b_number)*10+Character.getNumericValue(s_number);
+
+                cur_number += (raw_number-48);
+            }
+            outArr[i] = cur_number;
         }
+
+        for(int i=1; i < outArr.length; i +=2){
+            outstr += "x: " + outArr[i-1] + " y:" + outArr[i] +"\t";
+        }
+        countPoints.setText(outstr);
+
+        /*
+
+        positions = new LinkedList<Point>();
+            //Point np = new Point(Integer.parseInt(xypoints[i-1]), Integer.parseInt(xypoints[i]));
+            //positions.add(np);
+          */
     }
 
     @Override

@@ -53,12 +53,20 @@ public class Game {
 
 
     public static Point getNewPosition(Point point, float delta_x, float delta_y, boolean inverted) {
-        int new_x = (int) (point.x * ((inverted)? delta_x : -delta_x) * 8); //changes the x position by delta_x or -delta_x depnding on if the
+        float new_x = point.x;
+        float new_y = point.y;
+        if(inverted) {
+            new_x += delta_x * 8;
+            new_y += delta_y * 8;
+        } else {
+            new_x -= delta_x * 8;
+            new_y -= delta_y * 8;
+        }
+        //fits the coordinates to the canvas (values between 0 and 380)
         new_x =  (new_x < 0)? 0 : (new_x > 379)? 379 : new_x;
-        int new_y = (int) (point.x * ((inverted)? delta_y : -delta_y) * 8);
         new_y =  (new_y < 0)? 0 : (new_y > 379)? 379 : new_y;
 
-        return new Point(new_x, new_y);
+        return new Point((int)new_x, (int)new_y);
     }
 
     public static LinkedList<Point> getStartPosition(state state) {
