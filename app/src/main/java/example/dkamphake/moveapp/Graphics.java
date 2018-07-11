@@ -35,19 +35,24 @@ public class Graphics {
         canvas.drawBitmap(map, 0, 0, null);
         canvas.drawRect(0,0,380, 380, gray);
 
-        //add different modi here
+        /*
+            draws the shape onto the map
+            add different modi here
+         */
         switch (gamemode) {
             case RECTANGLE:
                 canvas.drawRect(40,40, 340, 340, purple);
                 break;
             case CIRCLE:
-                //canvas.drawCircle(190, 190,150, purple);
+                canvas.drawCircle(190, 190,150, purple);
+                break;
+            case WSHAPE:
                 List<Point> lW = ShapeGenerator.getShapeWList();
                 map = drawPointsToCanvas(lW, map);
                 break;
             case NOTHING:
             default:
-                //TODO
+                getMap();
                 canvas.drawRect(20,20, 360, 360, green);
                 break;
         }

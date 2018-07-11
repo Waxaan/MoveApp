@@ -16,11 +16,14 @@ public class MainActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //add the UI-elements to the activity
         setContentView(R.layout.activity_main);
         btnHistory = findViewById(R.id.History);
         btnGameStart = findViewById(R.id.btnChangeActivity);
         invertSwitch = findViewById(R.id.switch2);
 
+        //add listeners to buttons
         btnHistory.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -38,20 +41,18 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
+        //changes the movement-direction to normal or inverted on change
         invertSwitch.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                if (invertSwitch.isChecked()) {
-                    inverted = true;
-                } else {
-                    inverted = false;
-                }
+                if (invertSwitch.isChecked()) { inverted = true; }
+                else { inverted = false; }
             }
         });
 
     }
 
-
+    //standard functions
     @Override
     protected void onResume() {
         super.onResume();

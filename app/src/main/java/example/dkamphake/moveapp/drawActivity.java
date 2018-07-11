@@ -27,17 +27,13 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
-//grundmotivation
-//implementierungsdetails
-//kleine präsentation
-//16
 public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
 
+    //onscreen refresh rate
     private final int refreshRate = 1000/60;
     private final int bufferSize = 5;
     private SensorManager mSensorManager;
-    private Sensor mGyro, mAccel;
+    private Sensor mGyro;
     private ImageView mView;
     private Bitmap mBitmap = Bitmap.createBitmap(380, 380, Bitmap.Config.ARGB_8888);
     private List<Bitmap> prevMaps;
@@ -47,8 +43,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private Timer mTimer;
 
     private List<Float> GyroXList, GyroYList, GyroZList;
-    private List<Float> AccelXList, AccelYList, AccelZList;
-
     private List<Point> positions;
 
     private boolean gameIsRunning = false;
@@ -62,33 +56,35 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_draw);
+
         //initialize the Gyroscope and the Accelerometer
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         assert mSensorManager != null;
-        mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
-        //register the different display elements
+        //register the different UI-elements
         mView = findViewById(R.id.imageView);
         mText = findViewById(R.id.textView);
         mScore = findViewById(R.id.textView2);
         btnStart = findViewById(R.id.btnStart);
-        //btnRect = findViewById(R.id.btnRect);
-        //btnCircle = findViewById(R.id.btnCircle);
         btnReset = findViewById(R.id.btnReset);
         dropdown = findViewById(R.id.spinner);
 
 
         //initialize the variables needed to draw
-        AccelXList = new ArrayList<Float>();
-        AccelYList = new ArrayList<Float>();
-        AccelZList = new ArrayList<Float>();
-        GyroXList = new ArrayList<Float>();
-        GyroYList = new ArrayList<Float>();
-        GyroZList = new ArrayList<Float>();
+        GyroXList = new ArrayList<>();
+        GyroYList = new ArrayList<>();
+        GyroZList = new ArrayList<>();
 
-        positions = new ArrayList<Point>();
-        prevMaps = new LinkedList<Bitmap>();
+        positions = new ArrayList<>();
+        prevMaps = new LinkedList<>();
+
+
+        //add the different game-modes to the dropdown
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.gamemodes_dropdown, android.R.layout.simple_spinner_dropdown_item);
+        dropdown.setAdapter(adapter);
+        dropdown.setOnItemClickListener((AdapterView.OnItemClickListener) this);
 
         //add the buttonListener to start the game
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -109,24 +105,23 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.gamemodes_dropdown, android.R.layout.simple_spinner_dropdown_item);
-        dropdown.setAdapter(adapter);
-        dropdown.setOnItemClickListener((AdapterView.OnItemClickListener) this);
+
     }
 
     private void startGame() {
         gameIsRunning = true;
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(new drawBitmap(), 0, refreshRate);
-        btnStart.setText("Stop");
+        btnStart.setText("Interrupt");
     }
 
+    //interrupts game and saves the progress
     private void stopGame() {
+        //TODO: change the start/stop and Interrupt/continue and Reset buttons to save at the right time
 
         saveReplay();
         gameIsRunning = false;
-        btnStart.setText("Start");
+        btnStart.setText("Continue");
         mTimer.cancel();
     }
 
@@ -143,10 +138,11 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         String filename = "replay_0";
         int i = 0;
         boolean isReplaySaved = false;
-        while(isReplaySaved) {
-            if(fileList()[i] == filename) i++;
+        while(!isReplaySaved) {
+            if(fileList()[i].equals(filename)) i++;
             else {
                 filename = "replay_" + i;
+                isReplaySaved = true;
             }
         }
         FileOutputStream outputStream;
@@ -160,6 +156,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
+    //updates the current state of the game to the now selected item in the dropdown-menu
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         switch (position) {
@@ -177,7 +174,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-        return;
     }
 
     class drawBitmap extends TimerTask {
@@ -189,7 +185,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 public void run() {
 
                 //update the sensorData based on the average of the last 3 values
-                float[] accel = calcAverage3(AccelXList, AccelYList, AccelZList);
                 float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
                 positions.add(Game.getNewPosition(positions.get(positions.size()), gyro[1], gyro[0], isInverted));
@@ -211,8 +206,9 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
                 @SuppressLint("DefaultLocale") String output =
-                        "Accel: X: " + String.format("%.3f", accel[0]) + " Y: " + String.format("%.3f", accel[1]) + " Z: " + String.format("%.3f", accel[2]) + "\n"+
-                                "GYRO: X: " +  String.format("%.3f", gyro[0]) + "m Y: " + String.format("%.3f", gyro[1])+ "m Z: "  + String.format("%.3f", gyro[2])  + "m";
+                                "GYRO: X: " + String.format("%.3f", gyro[0]) +
+                                    "m Y: " + String.format("%.3f", gyro[1]) +
+                                    "m Z: " + String.format("%.3f", gyro[2]) + "m";
                 String scoreline = "Aktueller Punktestand: " + current_score;
                 mScore.setText(scoreline);
                 mText.setText(output);
@@ -241,7 +237,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     public final void reset() {
 
-        positions = new LinkedList<Point>();
+        positions = new LinkedList<>();
         current_score = 0;
         positions = Game.getStartPosition(current_state);
         mBitmap = Graphics.getMap(current_state);
@@ -255,12 +251,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     //update the sensor data
     @Override
     public final void onSensorChanged(SensorEvent event) {
-        if(event.sensor==mAccel) {
-            AccelXList.add(event.values[0]);
-            AccelYList.add(event.values[1]);
-            AccelZList.add(event.values[2]);
-
-        } else if(event.sensor==mGyro) {
+        if(event.sensor==mGyro) {
             GyroXList.add(event.values[0]);
             GyroYList.add(event.values[1]);
             GyroZList.add(event.values[2]);
@@ -271,7 +262,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
-        mSensorManager.registerListener(this, mAccel, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override

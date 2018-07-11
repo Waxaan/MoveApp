@@ -11,33 +11,31 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
 public class replays extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     private int replay_clicked = 0;
     private Button btnPlayReplay;
-    private Spinner dropdown;
+    private Spinner replayDropdown;
     private LinkedList<Point> positions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_replays);
 
-        dropdown = (Spinner) findViewById(R.id.replayDropdown);
+        replayDropdown = (Spinner) findViewById(R.id.replayDropdown);
         btnPlayReplay = (Button) findViewById(R.id.btnPlayReplay);
 
         String[] arraySpinner = fileList();
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, arraySpinner);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        dropdown.setAdapter(adapter);
+        replayDropdown.setAdapter(adapter);
 
 
         btnPlayReplay.setOnClickListener(new View.OnClickListener(){
