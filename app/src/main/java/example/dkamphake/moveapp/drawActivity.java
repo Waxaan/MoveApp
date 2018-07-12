@@ -32,7 +32,7 @@ import java.util.TimerTask;
 public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
 
     //onscreen refresh rate
-    private final int refreshRate = 1000/60;
+    private final int refreshRate = 1000/10;
     private final int bufferSize = 5;
     private SensorManager mSensorManager;
     private Sensor mGyro;
@@ -51,6 +51,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private boolean isInverted = false;
 
     private int current_score = 0;
+
 
     private state current_state = state.RECTANGLE;
 
@@ -229,11 +230,11 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
         //if there are less values in X|Y|Z than as intended in bufferSize don't run out of bounds
         for(int i = 0; i < ((X.size() < bufferSize)? X.size() : bufferSize); i++)
-            retArr[0] += X.get(i) / X.size();
+            retArr[0] += X.get(X.size()-i-1) / X.size();
         for(int i = 0; i < ((Y.size() < bufferSize)? Y.size() : bufferSize); i++)
-            retArr[1] += Y.get(i) / Y.size();
+            retArr[1] += Y.get(Y.size()-i-1) / Y.size();
         for(int i = 0; i < ((Z.size() < bufferSize)? Z.size() : bufferSize); i++)
-            retArr[2] += Z.get(i) / Z.size();
+            retArr[2] += Z.get(Z.size()-i-1) / Z.size();
 
         return retArr;
     }
