@@ -33,7 +33,7 @@ import java.util.TimerTask;
 public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
 
     //onscreen refresh rate
-    private final int refreshRate = 1000/10;
+    private final int refreshRate = 1000/60;
     private final int bufferSize = 5;
     private SensorManager mSensorManager;
     private Sensor mGyro;
@@ -53,7 +53,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private boolean isInverted = false;
 
     private int current_score = 0;
-    private int replayLength = 0;
 
 
     private state current_state = state.RECTANGLE;
@@ -134,52 +133,9 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
 
     @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
-    }
+    public void onNothingSelected(AdapterView<?> parent) {  }
 
     class drawBitmap extends TimerTask {
-
-        private int iteration = 0;
-
-        @Override
-        public void run() {
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-
-                    //update the sensorData based on the average of the last 3 values
-                    if(iteration == replayLength-1) {
-                        reset();
-                        iteration = 0;
-                    }
-                    int cur_x = positions.get(iteration).x;
-                    int cur_y = positions.get(iteration).y;
-                    //current_score += 10 *Game.getScoreV2(cur_x, cur_y, 1, 1, current_state);
-
-                    if(iteration <= 100) {
-                        mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
-                        prevMaps.add(mBitmap);
-                    } else {
-                        List<Point> last100Points = positions.subList(iteration-100, iteration);
-                        mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
-                        prevMaps.remove(0);
-                        prevMaps.add(mBitmap);
-                    }
-
-                    //Attach the canvas to the ImageView
-                    mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
-
-                    //String scoreline = "Aktueller Punktestand: " + current_score;
-                    //mScore.setText(scoreline);
-                }
-            });
-
-        }
-    }
-
-    class drawReplay extends TimerTask {
         @Override
         public void run() {
 
@@ -190,7 +146,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     //update the sensorData based on the average of the last 3 values
                     float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
-                    positions.add(Game.getNewPosition(positions.get(positions.size()-1), gyro[1], gyro[0], false));
+                    positions.add(Game.getNewPosition(positions.get(positions.size()-1), gyro[1], gyro[0], isInverted));
                     int cur_x = positions.get(positions.size()-1).x;
                     int cur_y = positions.get(positions.size()-1).y;
                     current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
@@ -209,9 +165,9 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
                     @SuppressLint("DefaultLocale") String output =
-                                    "GYRO: X: " + String.format("%.3f", gyro[0]) +
-                                        "m Y: " + String.format("%.3f", gyro[1]) +
-                                        "m Z: " + String.format("%.3f", gyro[2]) + "m";
+                                    "GYRO: X: " + String.format("%.3f", gyro[0]*100) +
+                                        "m Y: " + String.format("%.3f", gyro[1]*100) +
+                                        "m Z: " + String.format("%.3f", gyro[2]*100) + "m";
                     String scoreline = "Aktueller Punktestand: " + current_score;
                     mScore.setText(scoreline);
                     mText.setText(output);
@@ -242,12 +198,11 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         float[] retArr = new float[3];
 
         //if there are less values in X|Y|Z than as intended in bufferSize don't run out of bounds
-        for(int i = 0; i < ((X.size() < bufferSize)? X.size() : bufferSize); i++)
+        for(int i = 0; i < ((X.size() < bufferSize)? X.size() : bufferSize); i++) {
             retArr[0] += X.get(X.size()-i-1) / X.size();
-        for(int i = 0; i < ((Y.size() < bufferSize)? Y.size() : bufferSize); i++)
             retArr[1] += Y.get(Y.size()-i-1) / Y.size();
-        for(int i = 0; i < ((Z.size() < bufferSize)? Z.size() : bufferSize); i++)
             retArr[2] += Z.get(Z.size()-i-1) / Z.size();
+        }
         return retArr;
     }
 
