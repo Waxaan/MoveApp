@@ -32,7 +32,7 @@ import java.util.TimerTask;
 public class drawActivity extends AppCompatActivity implements SensorEventListener, AdapterView.OnItemSelectedListener {
 
     //onscreen refresh rate
-    private final int refreshRate = 1000/10;
+    private final int refreshRate = 1000/60;
     private final int bufferSize = 5;
     private SensorManager mSensorManager;
     private Sensor mGyro;
@@ -152,7 +152,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    class drawBitmap extends TimerTask {
+    class drawReplay extends TimerTask {
 
         private int iteration = 0;
 
@@ -193,7 +193,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    class drawReplay extends TimerTask {
+    class drawBitmap extends TimerTask {
         @Override
         public void run() {
 
