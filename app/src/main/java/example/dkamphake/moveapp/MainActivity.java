@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Switch;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity{
 
     private Button btnHistory, btnGameStart;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity{
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, drawActivity.class);
                 intent.putExtra("inverted", inverted);
+                intent.putExtra("replay", new ArrayList<>());
                 startActivity(intent);
             }
         });

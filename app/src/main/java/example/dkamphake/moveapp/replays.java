@@ -18,14 +18,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 public class replays extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     private int replay_clicked = 0;
     private Button btnPlayReplay;
     private Spinner replayDropdown;
-    private LinkedList<Point> positions;
+    private ArrayList<Point> positions;
     private TextView countPoints;
 
     @Override
@@ -34,26 +36,28 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
 
         setContentView(R.layout.activity_replays);
 
-        replayDropdown = (Spinner) findViewById(R.id.replayDropdown);
-        btnPlayReplay = (Button) findViewById(R.id.btnPlayReplay);
+        replayDropdown =  findViewById(R.id.replayDropdown);
+        btnPlayReplay =  findViewById(R.id.btnPlayReplay);
         countPoints = findViewById(R.id.textView5);
 
-        String[] arraySpinner = fileList();//{"test1", "test3", "test2"};
+        String[] fileList = fileList();
 
-        Spinner spinner = (Spinner)findViewById(R.id.replayDropdown);
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
+        Spinner replayDropdown = findViewById(R.id.replayDropdown);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, android.R.id.text1);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(spinnerAdapter);
-        for(int i = 0; i < arraySpinner.length; i++) {
-            spinnerAdapter.add(arraySpinner[i]);
+        replayDropdown.setAdapter(spinnerAdapter);
+
+        for (String filename : fileList) {
+            spinnerAdapter.add(filename);
         }
         spinnerAdapter.notifyDataSetChanged();
-        spinner.setOnItemSelectedListener(this);
+        replayDropdown.setOnItemSelectedListener(this);
 
 
         btnPlayReplay.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                positions = getReplay(replay_clicked);
                 Intent intent = new Intent(replays.this, drawActivity.class);
                 intent.putExtra("inverted", false);
                 intent.putExtra("replay", positions);
@@ -62,10 +66,8 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
         });
     }
 
+    private ArrayList getReplay(int pos) {
 
-
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         FileInputStream file = null;
         try {
             file = openFileInput("replay_0");
@@ -84,7 +86,6 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String outstr = "";
 
         //convert Strings like "495748" to Integer like "190"
         String[] xypoints = out.split("44");
@@ -96,24 +97,27 @@ public class replays extends AppCompatActivity implements AdapterView.OnItemSele
                 cur_number *= 10;
                 char b_number = xypoints[i].charAt(j-1);
                 char s_number = xypoints[i].charAt(j);
-                int raw_number = Character.getNumericValue(b_number)*10+Character.getNumericValue(s_number);
+                int cur_decimal = Character.getNumericValue(b_number)*10+Character.getNumericValue(s_number);
 
-                cur_number += (raw_number-48);
+                cur_number += (cur_decimal-48);
             }
             outArr[i] = cur_number;
         }
 
+        positions = new ArrayList<>();
+
         for(int i=1; i < outArr.length; i +=2){
-            outstr += "x: " + outArr[i-1] + " y:" + outArr[i] +"\t";
+            Point np = new Point(outArr[i-1], outArr[i]);
+            positions.add(np);
         }
-        countPoints.setText(outstr);
 
-        /*
+        return positions;
+    }
 
-        positions = new LinkedList<Point>();
-            //Point np = new Point(Integer.parseInt(xypoints[i-1]), Integer.parseInt(xypoints[i]));
-            //positions.add(np);
-          */
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        replay_clicked = position;
     }
 
     @Override

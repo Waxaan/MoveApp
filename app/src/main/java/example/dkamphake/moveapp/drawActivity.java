@@ -43,6 +43,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private Button btnStart, btnReset;
     private Spinner dropdown;
     private Timer mTimer;
+    private Bundle bundle;
 
     private List<Float> GyroXList, GyroYList, GyroZList;
     private List<Point> positions;
@@ -51,6 +52,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private boolean isInverted = false;
 
     private int current_score = 0;
+    private int replayLength = 0;
 
 
     private state current_state = state.RECTANGLE;
@@ -72,6 +74,14 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         btnStart = findViewById(R.id.btnStart);
         btnReset = findViewById(R.id.btnReset);
         dropdown = findViewById(R.id.spinner);
+
+        bundle = getIntent().getExtras();
+        isInverted = bundle.getBoolean("inverted");
+        List<Point> replay = (ArrayList<Point>)bundle.get("replay");
+        if(replay.size() > 10) {
+            replayLength = replay.size();
+            play(replay);
+        }
 
 
         //initialize the variables needed to draw
@@ -111,6 +121,12 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+    private void play(List<Point> replay) {
+        mTimer = new Timer();
+        mTimer.scheduleAtFixedRate(new drawReplay(), 0, refreshRate);
+        positions = replay;
+    }
+
     private void startGame() {
         gameIsRunning = true;
         mTimer = new Timer();
@@ -129,37 +145,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         mTimer.cancel();
     }
 
-    private void saveReplay() {
 
-        StringBuilder csvList = new StringBuilder();
-        for(Point p : positions){
-            csvList.append(p.x);
-            csvList.append(",");
-            csvList.append(p.y);
-            csvList.append(",");
-        }
-
-        Random rand = new Random();
-        String filename = "replay_"+ rand.nextInt(100);
-        int i = 0;
-        boolean isReplaySaved = false;
-        while(!isReplaySaved) {
-            if(fileList()[i].equals(filename)) i++;
-            else {
-                filename = "replay_" + i;
-                isReplaySaved = true;
-            }
-        }
-        FileOutputStream outputStream;
-
-        try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(csvList.toString().getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
@@ -167,6 +153,47 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     }
 
     class drawBitmap extends TimerTask {
+
+        private int iteration = 0;
+
+        @Override
+        public void run() {
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    //update the sensorData based on the average of the last 3 values
+                    if(iteration == replayLength-1) {
+                        reset();
+                        iteration = 0;
+                    }
+                    int cur_x = positions.get(iteration).x;
+                    int cur_y = positions.get(iteration).y;
+                    //current_score += 10 *Game.getScoreV2(cur_x, cur_y, 1, 1, current_state);
+
+                    if(iteration <= 100) {
+                        mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
+                        prevMaps.add(mBitmap);
+                    } else {
+                        List<Point> last100Points = positions.subList(iteration-100, iteration);
+                        mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
+                        prevMaps.remove(0);
+                        prevMaps.add(mBitmap);
+                    }
+
+                    //Attach the canvas to the ImageView
+                    mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
+
+                    //String scoreline = "Aktueller Punktestand: " + current_score;
+                    //mScore.setText(scoreline);
+                }
+            });
+
+        }
+    }
+
+    class drawReplay extends TimerTask {
         @Override
         public void run() {
 
@@ -235,7 +262,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             retArr[1] += Y.get(Y.size()-i-1) / Y.size();
         for(int i = 0; i < ((Z.size() < bufferSize)? Z.size() : bufferSize); i++)
             retArr[2] += Z.get(Z.size()-i-1) / Z.size();
-
         return retArr;
     }
 
@@ -251,6 +277,38 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         prevMaps.add(mBitmap);
     }
 
+    private void saveReplay() {
+
+        StringBuilder csvList = new StringBuilder();
+        for(Point p : positions){
+            csvList.append(p.x);
+            csvList.append(",");
+            csvList.append(p.y);
+            csvList.append(",");
+        }
+
+        Random rand = new Random();
+        String filename = "replay_"+ rand.nextInt(100);
+        int i = 0;
+        boolean isReplaySaved = false;
+        while(!isReplaySaved) {
+            if(fileList()[i].equals(filename)) i++;
+            else {
+                filename = "replay_" + i;
+                isReplaySaved = true;
+            }
+        }
+        FileOutputStream outputStream;
+
+        try {
+            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+            outputStream.write(csvList.toString().getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
@@ -264,6 +322,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             GyroZList.add(event.values[2]);
         }
     }
+
+
 
     @Override
     protected void onResume() {

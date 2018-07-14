@@ -48,7 +48,8 @@ public class Game {
     }
 
     private static double speedbonus(float x_delta, float y_delta) {
-        return Math.min(0.25 + 10* Math.sqrt(Math.abs(x_delta*y_delta)), 3);
+        return 1;
+        //return Math.min(0.25 + 10* Math.sqrt(Math.abs(x_delta*y_delta)), 3);
     }
 
 
