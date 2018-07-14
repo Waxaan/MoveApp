@@ -148,8 +148,13 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
                     //to add the color gradient for the courser-line
                     if(positions.size() <= 100) {
-                        mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
-                        prevMaps.add(mBitmap);
+                        if(prevMaps.size() == 0) {
+                            mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
+                            prevMaps.add(mBitmap);
+                        } else {
+                            mBitmap = Graphics.drawCourserToCanvas(positions, prevMaps.get(0));
+                            prevMaps.add(mBitmap);
+                        }
                     } else {
                         List<PointF> last100Points = positions.subList(positions.size()-100, positions.size());
                         mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
