@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
+import android.graphics.PointF;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class Graphics {
                 canvas.drawCircle(190, 190,150, purple);
                 break;
             case WSHAPE:
-                List<Point> lW = ShapeGenerator.getShapeWList();
+                List<PointF> lW = ShapeGenerator.getShapeWList();
                 map = drawPointsToCanvas(lW, map);
                 break;
             case NOTHING:
@@ -60,7 +60,7 @@ public class Graphics {
     }
 
     //may be used to draw more complex vector based maps
-    public static Bitmap drawPointsToCanvas(List<Point> positions, Bitmap map) {
+    public static Bitmap drawPointsToCanvas(List<PointF> positions, Bitmap map) {
 
         Paint purple = new Paint();
         purple.setColor(Color.parseColor("#800080"));
@@ -89,7 +89,7 @@ public class Graphics {
         return map;
     }
 
-    public static Bitmap drawCourserToCanvas(List<Point> pos, state gamemode) {
+    public static Bitmap drawCourserToCanvas(List<PointF> pos, state gamemode) {
         Bitmap map = getMap(gamemode);
 
         Paint green = new Paint();
@@ -114,7 +114,7 @@ public class Graphics {
         return map;
     }
 
-    public static Bitmap drawCourserToCanvas(List<Point> pos, Bitmap prevMap) {
+    public static Bitmap drawCourserToCanvas(List<PointF> pos, Bitmap prevMap) {
 
         Paint green = new Paint();
         green.setColor(Color.GREEN);

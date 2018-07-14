@@ -3,7 +3,7 @@ package example.dkamphake.moveapp;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -19,13 +19,11 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -47,7 +45,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private Bundle bundle;
 
     private List<Float> GyroXList, GyroYList, GyroZList;
-    private List<Point> positions;
+    private List<PointF> positions;
 
     private boolean gameIsRunning = false;
     private boolean isInverted = false;
@@ -147,15 +145,15 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
                     positions.add(Game.getNewPosition(positions.get(positions.size()-1), gyro[1], gyro[0], isInverted));
-                    int cur_x = positions.get(positions.size()-1).x;
-                    int cur_y = positions.get(positions.size()-1).y;
+                    float cur_x = positions.get(positions.size()-1).x;
+                    float cur_y = positions.get(positions.size()-1).y;
                     current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
 
                     if(positions.size() <= 100) {
                         mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
                         prevMaps.add(mBitmap);
                     } else {
-                        List<Point> last100Points = positions.subList(positions.size()-100, positions.size());
+                        List<PointF> last100Points = positions.subList(positions.size()-100, positions.size());
                         mBitmap = Graphics.drawCourserToCanvas(last100Points, prevMaps.get(90));
                         prevMaps.remove(0);
                         prevMaps.add(mBitmap);
@@ -229,6 +227,11 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
             GyroXList.add(event.values[0]);
             GyroYList.add(event.values[1]);
             GyroZList.add(event.values[2]);
+            if(GyroXList.size() > bufferSize) {
+                GyroXList.remove(0);
+                GyroYList.remove(0);
+                GyroZList.remove(0);
+            }
         }
     }
 
