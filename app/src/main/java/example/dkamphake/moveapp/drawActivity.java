@@ -147,7 +147,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     positions.add(Game.getNewPosition(positions.get(positions.size()-1), gyro[1], gyro[0], isInverted));
                     float cur_x = positions.get(positions.size()-1).x;
                     float cur_y = positions.get(positions.size()-1).y;
-                    current_score += 10 *Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
+                    current_score += Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
 
                     if(positions.size() <= 100) {
                         mBitmap = Graphics.drawCourserToCanvas(positions, current_state);

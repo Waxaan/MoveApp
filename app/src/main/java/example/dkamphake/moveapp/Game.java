@@ -1,6 +1,7 @@
 package example.dkamphake.moveapp;
 
 import android.graphics.PointF;
+import android.graphics.drawable.shapes.Shape;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -21,15 +22,16 @@ public class Game {
             case CIRCLE:
                 skeleton = ShapeGenerator.getStandardCircleList();
                 break;
+            case WSHAPE:
+                skeleton = ShapeGenerator.getShapeWList();
+                break;
             case NOTHING:
             default: return 0;
         }
+        //the further away from the middle of the road the less points are awarded;
+        //if its over 10units away get more negative points for increasing distance
         double distance = getMinDistance(x_current, y_current, skeleton);
-        double scalingFactor = min(4,20/distance);
-        if(distance > 10) {
-            scalingFactor *= (-1);
-        }
-        score = (int) (speedbonus(x_delta, y_delta) * scalingFactor);
+        score = (int) (speedbonus(x_delta, y_delta) * (20-distance));
         return score;
     }
 
@@ -48,8 +50,8 @@ public class Game {
     }
 
     private static double speedbonus(float x_delta, float y_delta) {
-        return 1;
-        //return Math.min(0.25 + 10* Math.sqrt(Math.abs(x_delta*y_delta)), 3);
+        double speed = Math.abs(x_delta+y_delta);
+        return Math.max(Math.min(speed, 0.5),4);
     }
 
 
@@ -65,7 +67,7 @@ public class Game {
         }
         //fits the coordinates to the canvas (values between 0 and 380)
         new_x =  (new_x < 0)? 0 : (new_x > 379)? 379 : new_x;
-        new_y =  (new_y < 0)? 190 : (new_y > 379)? 379 : new_y;
+        new_y =  (new_y < 0)? 0 : (new_y > 379)? 379 : new_y;
 
         return new PointF(new_x, new_y);
     }
