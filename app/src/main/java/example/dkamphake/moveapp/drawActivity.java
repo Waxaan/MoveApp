@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -76,13 +77,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         dropdown = findViewById(R.id.spinner);
 
         bundle = getIntent().getExtras();
-        isInverted = bundle.getBoolean("inverted");
-        List<Point> replay = (ArrayList<Point>)bundle.get("replay");
-        if(replay.size() > 10) {
-            replayLength = replay.size();
-            play(replay);
-        }
-
+        isInverted = Objects.requireNonNull(bundle).getBoolean("inverted");
 
         //initialize the variables needed to draw
         GyroXList = new ArrayList<>();
@@ -121,12 +116,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
-    private void play(List<Point> replay) {
-        mTimer = new Timer();
-        mTimer.scheduleAtFixedRate(new drawReplay(), 0, refreshRate);
-        positions = replay;
-    }
-
     private void startGame() {
         gameIsRunning = true;
         mTimer = new Timer();
@@ -136,9 +125,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     //interrupts game and saves the progress
     private void stopGame() {
-        //TODO: change the start/stop and Interrupt/continue and Reset buttons to save at the right time
-
-        saveReplay();
         reset();
         gameIsRunning = false;
         btnStart.setText("Restart");
@@ -275,38 +261,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         mView.setImageBitmap(mBitmap);
         prevMaps = new LinkedList<>();
         prevMaps.add(mBitmap);
-    }
-
-    private void saveReplay() {
-
-        StringBuilder csvList = new StringBuilder();
-        for(Point p : positions){
-            csvList.append(p.x);
-            csvList.append(",");
-            csvList.append(p.y);
-            csvList.append(",");
-        }
-
-        Random rand = new Random();
-        String filename = "replay_"+ rand.nextInt(100);
-        int i = 0;
-        boolean isReplaySaved = false;
-        while(!isReplaySaved) {
-            if(fileList()[i].equals(filename)) i++;
-            else {
-                filename = "replay_" + i;
-                isReplaySaved = true;
-            }
-        }
-        FileOutputStream outputStream;
-
-        try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(csvList.toString().getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

@@ -17,7 +17,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".drawActivity" />
-        <activity android:name=".replays"></activity>
     </application>
 
 </manifest>
