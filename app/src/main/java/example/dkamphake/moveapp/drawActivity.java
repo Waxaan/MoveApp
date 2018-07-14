@@ -18,10 +18,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -41,7 +39,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     private TextView mText, mScore;
     private Button btnStart, btnReset;
     private Spinner dropdown;
-    private Timer mTimer;
+    private Timer mTimer = new Timer();
     private Bundle bundle;
 
     private List<Float> GyroXList, GyroYList, GyroZList;
@@ -49,10 +47,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     private boolean gameIsRunning = false;
     private boolean isInverted = false;
-
     private int current_score = 0;
-
-
     private state current_state = state.RECTANGLE;
 
     @Override
@@ -96,8 +91,10 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!gameIsRunning) startGame();
-                else stopGame();
+                if (!gameIsRunning) {
+                    startGame();
+                }
+                else pauseGame();
             }
 
         });
@@ -107,6 +104,7 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         btnReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                pauseGame();
                 reset();
             }
         });
@@ -121,17 +119,12 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     }
 
     //interrupts game and saves the progress
-    private void stopGame() {
-        reset();
+    private void pauseGame() {
         gameIsRunning = false;
-        btnStart.setText("Restart");
+        btnStart.setText("Weiter");
         mTimer.cancel();
     }
 
-
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {  }
 
     class drawBitmap extends TimerTask {
         @Override
@@ -141,14 +134,19 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                 @Override
                 public void run() {
 
-                    //update the sensorData based on the average of the last 3 values
+                    //average out the sensory data for the Gyro-sensor; returns [X|Y|Z]
                     float[] gyro = calcAverage3(GyroXList, GyroYList, GyroZList);
 
+                    //calculate the current position and calculate the score based off of it
                     positions.add(Game.getNewPosition(positions.get(positions.size()-1), gyro[1], gyro[0], isInverted));
                     float cur_x = positions.get(positions.size()-1).x;
                     float cur_y = positions.get(positions.size()-1).y;
-                    current_score += Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state);
+                    current_score += Game.getScoreV2(cur_x, cur_y, gyro[1], gyro[0], current_state) / refreshRate;
 
+                    String scoreline = "Aktueller Punktestand: " + current_score;
+                    mScore.setText(scoreline);
+
+                    //to add the color gradient for the courser-line
                     if(positions.size() <= 100) {
                         mBitmap = Graphics.drawCourserToCanvas(positions, current_state);
                         prevMaps.add(mBitmap);
@@ -162,13 +160,13 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
                     //Attach the canvas to the ImageView
                     mView.setImageDrawable(new BitmapDrawable(getResources(), mBitmap));
 
+                    /* used for debug purposes
                     @SuppressLint("DefaultLocale") String output =
                                     "GYRO: X: " + String.format("%.3f", gyro[0]*100) +
                                         "m Y: " + String.format("%.3f", gyro[1]*100) +
                                         "m Z: " + String.format("%.3f", gyro[2]*100) + "m";
-                    String scoreline = "Aktueller Punktestand: " + current_score;
-                    mScore.setText(scoreline);
                     mText.setText(output);
+                    */
                 }
             });
 
@@ -180,14 +178,15 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         switch (position) {
             case 0 : current_state = state.RECTANGLE;
-                break; //rectangle
+                break;
             case 1 :  current_state = state.CIRCLE;
-                break; //Circle
+                break;
             case 2 :  current_state = state.WSHAPE;
-                break; //W-Shape
+                break;
             default : current_state = state.NOTHING;
                 break;
         }
+        pauseGame();
         reset();
     }
 
@@ -207,20 +206,24 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
 
     public final void reset() {
 
-        positions = new LinkedList<>();
+        gameIsRunning = false;
         current_score = 0;
+        positions = new LinkedList<>();
         positions = Game.getStartPosition(current_state);
         mBitmap = Graphics.getMap(current_state);
         mView.setImageBitmap(mBitmap);
         prevMaps = new LinkedList<>();
         prevMaps.add(mBitmap);
+        String scoreline = "Aktueller Punktestand: " + current_score;
+        mScore.setText(scoreline);
+        btnStart.setText("Start");
     }
 
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
-    //update the sensor data
+    //implements the SensorData as a Queue with the maximum size of buffer_size
     @Override
     public final void onSensorChanged(SensorEvent event) {
         if(event.sensor==mGyro) {
@@ -235,7 +238,8 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {  }
 
     @Override
     protected void onResume() {
@@ -247,5 +251,6 @@ public class drawActivity extends AppCompatActivity implements SensorEventListen
     protected void onPause() {
         super.onPause();
         mSensorManager.unregisterListener(this);
+        pauseGame();
     }
 }

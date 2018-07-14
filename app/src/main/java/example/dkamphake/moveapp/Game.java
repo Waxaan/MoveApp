@@ -1,12 +1,8 @@
 package example.dkamphake.moveapp;
 
 import android.graphics.PointF;
-import android.graphics.drawable.shapes.Shape;
-
 import java.util.LinkedList;
 import java.util.List;
-
-import static java.lang.Math.min;
 import static java.lang.Math.sqrt;
 
 public class Game {
@@ -35,6 +31,7 @@ public class Game {
         return score;
     }
 
+    //calculates the lowest distance between the courser and the current shape
     public static double getMinDistance(float x, float y, List<PointF> skeleton) {
 
         double minDistance = Integer.MAX_VALUE;
@@ -49,12 +46,13 @@ public class Game {
         return minDistance;
     }
 
+    //awards additional bonus- or malus-points based on the speed the players is playing the game
     private static double speedbonus(float x_delta, float y_delta) {
         double speed = Math.abs(x_delta+y_delta);
         return Math.max(Math.min(speed, 0.5),4);
     }
 
-
+    //calculates the new position for the courser based on the gyro-data
     public static PointF getNewPosition(PointF point, float delta_x, float delta_y, boolean inverted) {
         float new_x = point.x;
         float new_y = point.y;
@@ -72,6 +70,7 @@ public class Game {
         return new PointF(new_x, new_y);
     }
 
+    //returns the starting positions for each game-mode so that the Point-List isn't empty
     public static LinkedList<PointF> getStartPosition(state state) {
         LinkedList<PointF> positions = new LinkedList<>();
         switch (state) {
@@ -84,8 +83,8 @@ public class Game {
                 positions.add(new PointF(190, 40));
                 break;
             case WSHAPE:
-                positions.add(new PointF(190, 40));
-                positions.add(new PointF(190, 40));
+                positions.add(new PointF(35, 35));
+                positions.add(new PointF(35, 35));
                 break;
             default:
                 positions.add(new PointF(190, 190));

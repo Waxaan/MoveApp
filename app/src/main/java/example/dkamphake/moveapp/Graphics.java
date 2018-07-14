@@ -48,7 +48,7 @@ public class Graphics {
                 break;
             case WSHAPE:
                 List<PointF> lW = ShapeGenerator.getShapeWList();
-                map = drawPointsToCanvas(lW, map);
+                map = drawShapeToCanvas(lW, map);
                 break;
             case NOTHING:
             default:
@@ -60,12 +60,12 @@ public class Graphics {
     }
 
     //may be used to draw more complex vector based maps
-    public static Bitmap drawPointsToCanvas(List<PointF> positions, Bitmap map) {
+    public static Bitmap drawShapeToCanvas(List<PointF> positions, Bitmap map) {
 
         Paint purple = new Paint();
         purple.setColor(Color.parseColor("#800080"));
         purple.setStyle(Paint.Style.STROKE);
-        purple.setStrokeWidth(40);
+        purple.setStrokeWidth(20);
         purple.setAntiAlias(true);
 
         Paint green = new Paint();
@@ -77,18 +77,22 @@ public class Graphics {
         Canvas canvas = new Canvas(map);
         canvas.drawBitmap(map, 0, 0, null);
 
-        //canvas.drawRect(40,40, 340, 340, purple);
+        /* can be used to visualize the Point-skeleton
         for (int i = 1; i < positions.size(); i++) {
-            //canvas.drawLine(positions.get(i - 1).x, positions.get(i - 1).y, positions.get(i).x, positions.get(i).y, purple);
+            canvas.drawLine(positions.get(i - 1).x, positions.get(i - 1).y, positions.get(i).x, positions.get(i).y, purple);
         }
-        //canvas.drawLine(positions.get(positions.size()-1).x, positions.get(positions.size()-1).y, positions.get(0).x, positions.get(0).y, purple);
+        canvas.drawLine(positions.get(positions.size()-1).x, positions.get(positions.size()-1).y, positions.get(0).x, positions.get(0).y, purple);
+        */
         for (int i = 0; i < positions.size(); i++) {
             canvas.drawCircle(positions.get(i).x, positions.get(i).y, 10, purple); //visualize Point-skeleton
         }
 
+
         return map;
     }
 
+    //draws the current points to the canvas;
+    //used in the early part of the game when no color gradient it being used
     public static Bitmap drawCourserToCanvas(List<PointF> pos, state gamemode) {
         Bitmap map = getMap(gamemode);
 
@@ -114,6 +118,8 @@ public class Graphics {
         return map;
     }
 
+    //draws the current points to the canvas;
+    //used in the later part of the game when the color gradient it being used
     public static Bitmap drawCourserToCanvas(List<PointF> pos, Bitmap prevMap) {
 
         Paint green = new Paint();

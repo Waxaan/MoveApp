@@ -72,6 +72,7 @@ public class ShapeGenerator {
     public static List<PointF> getShapeWList() {
         List<PointF> list = new ArrayList<>();
         float resolution = 100;
+        //sets the starting position to the top left corner
         float x = 35; //(390-320)/2
         float y = 35;
         final float unit = 100/resolution;
